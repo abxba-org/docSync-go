@@ -24,6 +24,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
@@ -73,24 +74,24 @@ func fixGlyphSet(mode GlyphMode) fixGlyphs {
 
 // FixFlowApplied is one applied patch.
 type FixFlowApplied struct {
-	DocPath      string
-	PatchRef     string
-	ThreeWayUsed bool
+	DocPath      string `json:"docPath"`
+	PatchRef     string `json:"patchRef"`
+	ThreeWayUsed bool   `json:"threeWayUsed"`
 }
 
 // FixFlowSkipped is one skipped candidate.
 type FixFlowSkipped struct {
-	DocPath string
-	Reason  string
-	Detail  string
+	DocPath string `json:"docPath"`
+	Reason  string `json:"reason"`
+	Detail  string `json:"detail"`
 }
 
 // FixFlowRefused is one refused candidate (P7-T10 lanes).
 type FixFlowRefused struct {
-	DocPath    string
-	Reason     string
-	Detail     string
-	ReDetected bool
+	DocPath    string `json:"docPath"`
+	Reason     string `json:"reason"`
+	Detail     string `json:"detail"`
+	ReDetected bool   `json:"reDetected"`
 }
 
 // FixFlowResultKind is the kind of the closed flow result union.
@@ -288,6 +289,9 @@ type FixFlowInput struct {
 	RunID        string
 	AllowDirty   bool
 	DocSelectors []string
+	// Budgets are the pipeline budget overrides the run carries (the CLI
+	// passes the command-level overrides through to the runtime, TS parity).
+	Budgets *orchestrator.PipelineBudgetOverrides
 }
 
 // noopIncident is a silent incident sink (production default until the incident
@@ -295,6 +299,90 @@ type FixFlowInput struct {
 type noopIncident struct{}
 
 func (noopIncident) Record(_, _, _, _, _, _ string) error { return nil }
+
+/* ------------------------------------------------- the incident log sink */
+
+// incidentLogFilename is the safety-incident ledger name under the state dir
+// (TS INCIDENT_LOG_FILENAME: `incidents.jsonl`).
+const incidentLogFilename = "incidents.jsonl"
+
+// safetyIncidentRecord is the on-disk record (TS SAFETY_INCIDENT_SCHEMA:
+// docsync.safety-incident/v1 — strict field order, the caller-supplied
+// clock `at`, the deterministic incident_id derived below).
+type safetyIncidentRecord struct {
+	Schema        string `json:"schema"`
+	At            string `json:"at"`
+	RunID         string `json:"run_id"`
+	Rule          string `json:"rule"`
+	OffendingPath string `json:"offending_path"`
+	Detail        string `json:"detail"`
+	DocPath       string `json:"doc_path,omitempty"`
+	IncidentID    string `json:"incident_id"`
+}
+
+// fileIncidentSink appends schema-valid safety-incident JSONL lines (the TS
+// fileIncidentSink + createIncidentLog): the deterministic `inc-<sha16>` id
+// is the sha256 over the canonical record WITHOUT the id; same inputs always
+// produce the same id (evidence duplication, never loss). Exactly one retry,
+// then fail loud — an incident that cannot be recorded is itself an incident.
+type fileIncidentSink struct {
+	path string
+	mu   sync.Mutex
+}
+
+func newFileIncidentSink(stateDir string) *fileIncidentSink {
+	return &fileIncidentSink{path: filepath.Join(stateDir, incidentLogFilename)}
+}
+
+// IncidentRecord is the incident-log interface (the FixIncidentPort seam the
+// TS IncidentSink/append satisfies).
+func (s *fileIncidentSink) Record(at, runID, rule, offendingPath, detail, docPath string) error {
+	record := safetyIncidentRecord{
+		Schema:        "docsync.safety-incident/v1",
+		At:            at,
+		RunID:         runID,
+		Rule:          rule,
+		OffendingPath: offendingPath,
+		Detail:        detail,
+		DocPath:       docPath,
+	}
+	withoutID, err := json.Marshal(&record)
+	if err != nil {
+		return err
+	}
+	record.IncidentID = "inc-" + docutil.ContentHash(string(withoutID))[:16]
+	line, err := json.Marshal(&record)
+	if err != nil {
+		return err
+	}
+	line = append(line, '\n')
+
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	if err := os.MkdirAll(filepath.Dir(s.path), 0o755); err != nil {
+		return err
+	}
+	// Exactly one retry, then fail loud.
+	for attempt := 0; ; attempt++ {
+		file, err := os.OpenFile(s.path, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0o644)
+		if err == nil {
+			_, writeErr := file.Write(line)
+			closeErr := file.Close()
+			if writeErr == nil && closeErr == nil {
+				return nil
+			}
+			err = writeErr
+			if err == nil {
+				err = closeErr
+			}
+		}
+		if attempt >= 1 {
+			return fmt.Errorf(
+				"docsync: incident %s (rule=%s, path=%s) could not be persisted after one retry: %v",
+				record.IncidentID, rule, offendingPath, err)
+		}
+	}
+}
 
 // RunFix runs the `fix` verb (P7-T08..T13).
 func RunFix(args *ParsedInvocation, io CliIo, options FixOptions) DocsyncExitCode {
@@ -349,6 +437,8 @@ func RunFix(args *ParsedInvocation, io CliIo, options FixOptions) DocsyncExitCod
 
 	stateDir := filepath.Join(repoRoot, schemas.DocSyncDir, "state")
 	store := NewFixRunRecordStore(stateDir)
+	// The safety-incident ledger rides the SAME state dir (TS fileIncidentSink).
+	incidents := newFileIncidentSink(stateDir)
 
 	/* 3. Compose — ALL config validation happens here, before any AI stage. */
 	git, err := gitx.NewGitClient(gitx.GitClientOptions{RepoRoot: repoRoot})
@@ -362,6 +452,9 @@ func RunFix(args *ParsedInvocation, io CliIo, options FixOptions) DocsyncExitCod
 		Env:       env,
 		Clock:     clock,
 		Transport: options.Transport,
+		OnPatch: func(captured *schemas.DocPatch, _ string) {
+			capture.add(captured)
+		},
 	})
 	if err != nil {
 		return renderFixComposeFailure(err, io)
@@ -378,7 +471,7 @@ func RunFix(args *ParsedInvocation, io CliIo, options FixOptions) DocsyncExitCod
 		Runtime:   runtime,
 		Git:       git,
 		Store:     store,
-		Incidents: noopIncident{},
+		Incidents: incidents,
 		Io:        io,
 		Clock:     clock,
 		PatchSource: func(ctx context.Context, docPath string, patchRef *string) (*schemas.DocPatch, error) {
@@ -393,6 +486,7 @@ func RunFix(args *ParsedInvocation, io CliIo, options FixOptions) DocsyncExitCod
 		RunID:        runID,
 		AllowDirty:   args.AllowDirty,
 		DocSelectors: args.DocPaths,
+		Budgets:      options.Budgets,
 	})
 	return renderFixFlowResult(result, args, io, nil)
 }
@@ -545,7 +639,7 @@ func RunFixFlow(ctx context.Context, deps FixFlowDeps, input FixFlowInput) FixFl
 	}
 
 	/* (c) PIPELINE RUN — typed failure lanes (D8/D14). */
-	outcome, err := deps.Runtime.Run(ctx, CliRuntimeRunInput{Base: input.Base, Head: input.Head})
+	outcome, err := deps.Runtime.Run(ctx, CliRuntimeRunInput{Base: input.Base, Head: input.Head, Budgets: input.Budgets})
 	if err != nil {
 		if isConfigClass(err) {
 			return FixFlowResult{Kind: FixResultConfigError, Detail: describeErr(err)}
@@ -553,9 +647,11 @@ func RunFixFlow(ctx context.Context, deps FixFlowDeps, input FixFlowInput) FixFl
 		return FixFlowResult{Kind: FixResultRuntimeErr, Detail: describeErr(err)}
 	}
 
-	var applied []FixFlowApplied
-	var skipped []FixFlowSkipped
-	var refused []FixFlowRefused
+	// The result slices start EMPTY (never nil) so the JSON surfaces emit
+	// `[]` rather than `null` (the TS payload contract).
+	var applied = []FixFlowApplied{}
+	var skipped = []FixFlowSkipped{}
+	var refused = []FixFlowRefused{}
 	appliedThisRun := map[string]bool{}
 	reDetected := false
 
@@ -666,7 +762,7 @@ func RunFixFlow(ctx context.Context, deps FixFlowDeps, input FixFlowInput) FixFl
 		default: // abstain — the P7-T10 refuse-and-rerun lane for the doc-changed race.
 			if applyOutcome.AbstainReason == string(patch.AbstainDocChangedRaceUnverified) && !reDetected {
 				reDetected = true
-				freshOutcome, rerr := deps.Runtime.Run(ctx, CliRuntimeRunInput{Base: input.Base, Head: input.Head})
+				freshOutcome, rerr := deps.Runtime.Run(ctx, CliRuntimeRunInput{Base: input.Base, Head: input.Head, Budgets: input.Budgets})
 				if rerr != nil {
 					refused = append(refused, FixFlowRefused{DocPath: docPath, Reason: "stale-patch", Detail: describeErr(rerr), ReDetected: true})
 					return

@@ -670,6 +670,9 @@ func (p *githubRestPlatform) UpdatePr(ctx context.Context, pr PrRef, input Updat
 	}
 	updated, err := p.parsePr(parsed)
 	if err != nil {
+		// Fail closed: a malformed update response must not surface as a
+		// zero PrRef with a nil error (the TS platform refuses it).
+		return PrRef{}, err
 	}
 	p.remember(updated, repo)
 	return updated, nil

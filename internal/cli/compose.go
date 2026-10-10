@@ -94,6 +94,10 @@ type CliRuntimeOptions struct {
 	// Transport is the model transport injection seam (recorded doubles for
 	// tests, OD-2). Consumed by the model-ports builder; nil otherwise.
 	Transport any
+	// OnPatch is the patch-capture seam (P7-T08): invoked with each verified
+	// patch object as it crosses the verification boundary — the single honest
+	// capture point the fix flow resolves its patches through.
+	OnPatch func(patch *schemas.DocPatch, docPath string)
 }
 
 // CliRuntimeRunInput is the input of CliRuntime.Run.
@@ -302,6 +306,9 @@ type ModelPortsOptions struct {
 	APIKey    string
 	Env       map[string]string
 	Transport any
+	// OnPatch is the patch-capture seam forwarded to the verification port
+	// (the fix composition's capture; nil in the check/pr compositions).
+	OnPatch func(patch *schemas.DocPatch, docPath string)
 }
 
 // ModelPortsBuilderImpl builds the model-backed PipelinePorts for an online
@@ -400,6 +407,7 @@ func createCliPipelineRuntime(options CliRuntimeOptions) (CliRuntime, error) {
 			APIKey:    credentials.Key,
 			Env:       options.Env,
 			Transport: options.Transport,
+			OnPatch:   options.OnPatch,
 		})
 		if err != nil {
 			return nil, err

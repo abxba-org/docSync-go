@@ -38,8 +38,12 @@ var MemoryFiles = []string{
 var StateSubdirs = []string{"baselines", "claims", "docs", "runs"}
 
 // StateFiles are the system-written state files at the `state/` root
-// (STATE_FILES).
-var StateFiles = []string{"audit-cursor"}
+// (STATE_FILES): the audit cursor plus the fix verb's provenance ledger
+// (fix-run-records.jsonl) and the safety-incident ledger (incidents.jsonl).
+// Both fix lanes are the Go port's own system writes (the TS composition owns
+// the same state dir), so they are canonical — an unknown state entry never
+// includes them.
+var StateFiles = []string{"audit-cursor", "fix-run-records.jsonl", "incidents.jsonl"}
 
 // TopLevelDirs are the top-level `.docsync/` directories. policy-history/
 // sits at the TOP level — never under memory/ (D1 tree in ARCH §6.3).

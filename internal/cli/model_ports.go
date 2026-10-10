@@ -19,6 +19,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"strings"
 
 	"github.com/DUDE616/docSync-go/internal/gitx"
 	"github.com/DUDE616/docSync-go/internal/globs"
@@ -102,13 +103,10 @@ func BuildModelPorts(ctx context.Context, opts ModelPortsOptions) (ModelPorts, e
 	if err != nil {
 		return ModelPorts{}, err
 	}
-	verificationStage, err := verifier.CreateVerificationStagePort(verifier.VerificationStageDeps{
+	verificationDeps := verifier.VerificationStageDeps{
 		Judge:          judgeRole,
 		WriterIdentity: verifier.SessionIdentity{Role: "patch-writer", SessionID: "docsync-pipeline-writer"},
 		JudgeIdentity:  verifier.SessionIdentity{Role: "judge", SessionID: "docsync-pipeline-judge"},
-	})
-	if err != nil {
-		return ModelPorts{}, err
 	}
 
 	/* -- Stage 4: the policy outcome engine (D11) --------------------------- */
@@ -118,9 +116,9 @@ func BuildModelPorts(ctx context.Context, opts ModelPortsOptions) (ModelPorts, e
 	})
 
 	return ModelPorts{
-		Decision:     orchestratorDecisionPort{bridge: bridge},
+		Decision:     orchestratorDecisionPort{bridge: bridge, stage: decisionStage},
 		Writer:       orchestratorWriterPort{port: writerStage},
-		Verification: orchestratorVerificationPort{port: verificationStage},
+		Verification: orchestratorVerificationPort{deps: verificationDeps, git: opts.Git, onPatch: opts.OnPatch},
 		Policy:       orchestratorPolicyPort{port: policyStage},
 	}, nil
 }
@@ -136,20 +134,86 @@ func matchGlobs(path, glob string) bool {
 
 /* ------------------------------------------------- decision-stage adapter */
 
+// orchestratorDecisionPort adapts the policy Jev decision stage onto the core
+// DecisionStagePort shape (policy never imports the orchestrator). The stage
+// is held directly so the composition can apply the V1 seam-2 definite
+// upgrade (TS compose.ts) before the call; the bridge remains the fallback
+// path (and owns the no-analysis abstention).
 type orchestratorDecisionPort struct {
 	bridge policy.BridgeCoreDecisionStage
+	stage  policy.JevDecisionStage
 }
 
 func (p orchestratorDecisionPort) Decide(input orchestrator.DecisionStageInput) (orchestrator.DecisionStageResult, error) {
+	// The canonical no-analysis abstention (never a guess) — the bridge owns it.
+	if input.Analysis == nil {
+		result, err := p.bridge.Decide(policy.BridgeCoreDecisionStageInput{Analysis: nil})
+		if err != nil {
+			return orchestrator.DecisionStageResult{}, err
+		}
+		return jevResultToOrchestrator(result), nil
+	}
+	// V1 seam 2 (TS packages/cli/src/compose.ts): path-level analysis cannot
+	// derive 'definite'; a substantive change classified 'none' must not be
+	// auto-quieted — fail to MORE investigation (D14). Trivial kinds keep
+	// their honest 'none' → ignore route.
+	derived := policy.BuildJevStageInput(input.Analysis, nil)
+	trivial := derived.AnalysisContext.ChangeKind == schemas.ChangeKindFormattingOnly ||
+		derived.AnalysisContext.ChangeKind == schemas.ChangeKindTestOnly
+	if !trivial && derived.AnalysisContext.DocumentationImpact == schemas.DocumentationImpactNone {
+		grounding, hasGrounding := derived.AnalysisContext.Answers[policy.DecidingAnswerKey]
+		probability := grounding.Probability
+		if !hasGrounding || probability == 0 {
+			probability = GROUNDING_PROBABILITY_FALLBACK
+		}
+		derived.AnalysisContext.DocumentationImpact = schemas.DocumentationImpactDefinite
+		if derived.AnalysisContext.Answers == nil {
+			derived.AnalysisContext.Answers = policy.JevAnswers{}
+		}
+		derived.AnalysisContext.Answers[policy.DecidingAnswerKey] = schemas.Answer{
+			Value:       json.RawMessage(`"definite"`),
+			Probability: probability,
+		}
+		result, err := p.stage.Decide(derived)
+		if err != nil {
+			return orchestrator.DecisionStageResult{}, err
+		}
+		return jevResultToOrchestrator(result), nil
+	}
 	result, err := p.bridge.Decide(policy.BridgeCoreDecisionStageInput{Analysis: input.Analysis})
 	if err != nil {
 		return orchestrator.DecisionStageResult{}, err
 	}
-	return orchestrator.DecisionStageResult{
+	return jevResultToOrchestrator(result), nil
+}
+
+// jevResultToOrchestrator maps the policy stage result onto the core-shaped
+// decision stage result (TS parity: the bridge result passthrough, telemetry
+// carried verbatim — the routed model/provider halves reach the run
+// provenance, D3).
+func jevResultToOrchestrator(result policy.JevDecisionStageResult) orchestrator.DecisionStageResult {
+	out := orchestrator.DecisionStageResult{
 		Decision:      result.Decision,
 		Abstained:     result.Abstained,
 		AbstainReason: result.AbstainReason,
-	}, nil
+	}
+	if result.Telemetry != nil {
+		telemetry := &orchestrator.StageTelemetry{
+			LatencyMS: result.Telemetry.LatencyMS,
+			Model:     result.Telemetry.Model,
+			Provider:  result.Telemetry.Provider,
+		}
+		if result.Telemetry.Usage != nil {
+			telemetry.Usage = &orchestrator.DecisionUsageSeed{
+				PromptTokens:     result.Telemetry.Usage.PromptTokens,
+				CompletionTokens: result.Telemetry.Usage.CompletionTokens,
+				TotalTokens:      result.Telemetry.Usage.TotalTokens,
+				Cost:             result.Telemetry.Usage.Cost,
+			}
+		}
+		out.Telemetry = telemetry
+	}
+	return out
 }
 
 /* ------------------------------------------------ decision-engine role bridge */
@@ -247,7 +311,10 @@ func (p patchWriterClientPort) BindingFor(role string) (openrouter.PatchWriterRo
 	if err != nil {
 		return openrouter.PatchWriterRoleBinding{}, err
 	}
-	if binding == nil {
+	if binding == nil || binding.Params == nil {
+		// The binding (and its optional params block) may be absent — the TS
+		// optional chaining (`binding.params?.structuredOutput`) projected
+		// that to an empty projection, never a nil dereference.
 		return openrouter.PatchWriterRoleBinding{}, nil
 	}
 	return openrouter.PatchWriterRoleBinding{StructuredOutput: binding.Params.StructuredOutput}, nil
@@ -415,13 +482,47 @@ func (p writerGitPort) DiffFiles(base, head string) ([]gitx.DiffFileRecord, erro
 
 /* --------------------------------------------- verification-stage adapter */
 
+// orchestratorVerificationPort adapts the verifier's stage port onto the core
+// verification seam. The TS composition builds the verifier port PER verify
+// call (compose.ts `verificationPortWithDocContent`) so the two per-call
+// seams ride the REAL git client: seam 3 (the doc content at the real head
+// SHA when the runner hands null) and seam 4 (the evidence workspace sources
+// bounded by MAX_EVIDENCE_SOURCES). The Go port mirrors that here.
 type orchestratorVerificationPort struct {
-	port verifier.VerificationStagePort
+	deps    verifier.VerificationStageDeps
+	git     *gitx.GitClient
+	onPatch func(patch *schemas.DocPatch, docPath string)
 }
 
 func (p orchestratorVerificationPort) Verify(input orchestrator.VerificationStageInput) (orchestrator.VerificationStageResult, error) {
 	patch := input.Patch
-	result, err := p.port.Verify(verifier.VerificationStageInput{
+	docContent := input.DocContent
+	head := input.Ctx.Head
+	// P7-T08 capture seam: the patch OBJECT is surfaced to the fix
+	// composition here — the frozen RunOutcome carries only the patch_ref, so
+	// this is the single honest capture boundary.
+	if p.onPatch != nil {
+		p.onPatch(&patch, patch.DocPath)
+	}
+	// Seam 3: the runner hands docContent nil — the glue fetches the doc at
+	// the REAL head SHA through the REAL GitClient.
+	if docContent == nil && p.git != nil {
+		if result, err := p.git.CatFile(context.Background(), head, patch.DocPath); err == nil && result.Content != "" {
+			content := result.Content
+			docContent = &content
+		}
+	}
+	// Seam 4: the per-call evidence workspace sources over the SAME shared
+	// deps (the stage deps are static by design).
+	deps := p.deps
+	if p.git != nil {
+		deps.WorkspaceSources = cliEvidenceWorkspaceSources(p.git, head, &patch)
+	}
+	port, err := verifier.CreateVerificationStagePort(deps)
+	if err != nil {
+		return orchestrator.VerificationStageResult{}, err
+	}
+	result, err := port.Verify(verifier.VerificationStageInput{
 		Ctx: verifier.RunContext{
 			Repo:     input.Ctx.Repo,
 			RepoRoot: input.Ctx.RepoRoot,
@@ -434,12 +535,55 @@ func (p orchestratorVerificationPort) Verify(input orchestrator.VerificationStag
 			Clock:    input.Ctx.Clock,
 		},
 		Patch:      &patch,
-		DocContent: input.DocContent,
+		DocContent: docContent,
 	})
 	if err != nil {
 		return orchestrator.VerificationStageResult{}, err
 	}
 	return orchestrator.VerificationStageResult{Report: result.Report}, nil
+}
+
+// cliEvidenceWorkspaceSources mirrors the TS evidenceWorkspaceSources: the
+// deduped repo-relative paths named by the patch hunks' evidence refs
+// (bounded by MAX_EVIDENCE_SOURCES), read at head through git; an unreadable
+// evidence file is omitted — the claim routes unanchored.
+func cliEvidenceWorkspaceSources(git *gitx.GitClient, head string, patch *schemas.DocPatch) map[string]string {
+	paths := []string{}
+	for hunkIndex := range patch.Hunks {
+		for _, evidence := range patch.Hunks[hunkIndex].EvidenceRefs {
+			path := evidence.Ref
+			if idx := strings.Index(path, ":"); idx >= 0 {
+				path = path[:idx]
+			}
+			if path == "" || strings.HasPrefix(path, ".docsync/") || strings.Contains(path, "..") ||
+				cliContainsString(paths, path) {
+				continue
+			}
+			paths = append(paths, path)
+			if len(paths) >= MAX_EVIDENCE_SOURCES {
+				break
+			}
+		}
+		if len(paths) >= MAX_EVIDENCE_SOURCES {
+			break
+		}
+	}
+	sources := map[string]string{}
+	for _, path := range paths {
+		if result, err := git.CatFile(context.Background(), head, path); err == nil && result.Content != "" {
+			sources[path] = result.Content
+		}
+	}
+	return sources
+}
+
+func cliContainsString(list []string, want string) bool {
+	for _, item := range list {
+		if item == want {
+			return true
+		}
+	}
+	return false
 }
 
 /* ------------------------------------------------ policy-stage adapter */

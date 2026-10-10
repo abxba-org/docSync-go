@@ -496,10 +496,12 @@ type DocPrClient interface {
 	UpsertDocPr(ctx context.Context, input UpsertDocPrInput) (UpsertDocPrResult, error)
 }
 
-// docPrClient is the constructed upsert client.
+// docPrClient is the constructed upsert client. The credential union is
+// validated by the constructor and then deliberately NOT retained (INV-8:
+// "validated by the composed client, then never retained") — the platform
+// owns the token at call time, so no docPrClient field carries it.
 type docPrClient struct {
 	platform      PrPlatformPort
-	credentials   PrCredentials
 	repo          string
 	defaultBranch string
 	clock         func() string
@@ -527,7 +529,6 @@ func NewDocPrClient(deps DocPrClientDeps) (DocPrClient, error) {
 	}
 	return &docPrClient{
 		platform:      deps.Platform,
-		credentials:   deps.Credentials,
 		repo:          deps.Repo,
 		defaultBranch: deps.DefaultBranch,
 		clock:         deps.Clock,

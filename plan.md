@@ -132,24 +132,68 @@ coverage per touched package.
 
 | Wave | Packages | Build | Vet | Tests | Coverage | Gate |
 |---|---|---|---|---|---|---|
-| W0 | docutil, schemas(foundation) | green | green | — | — | green |
+| W0 | docutil, schemas(foundation) | green | green | green | — | green |
+| W1 | schemas complete (43-entry registry, JSON Schema export) | green | green | green | ~100% on ported files | green |
+| W2 | state/CAS, boundaries, modes, precedence, globs, gitx, layout+validate | green | green | green | 86–99% | green |
+| W3 | claims, graph, baselines, statemachine, contracts, triggers, lint, envlint | green | green | green | 83–91% | green |
+| W4 | analysis, patch, retrieval, cache | green | green | green | 82–100% | green |
+| W5 | policy (12 units), feedback, memory, workspace, drift, config-diff | green | green | green | 85–100% | green |
+| W6 | openrouter, provenance, coverage-audit, evaluation, audit | green | green | green | 90–100% | green |
+| W7 | verifier (tiers 1–3 + pipeline + storage + replay), orchestrator run pipeline, gitpr write path | green | green | green | 78–94% | green |
+| W8 | analyzers, cli + cmd/docsync, action + github-app, model-ports adapter binding | green | green | green | 70–100% | green |
+| W9 (coverage) | orchestrator, cli, docutil, analysis, gitx, envlint, gitpr test waves | green | green | green | see below | green |
 
-(Updated by the orchestrator after each wave; claims here are backed by
-executed commands, never by delegate status messages.)
+Final verification (executed): `go build ./...` · `go vet ./...` · `gofmt -l internal/ cmd/`
+(empty) · `go test ./... -count=1` (41/41 packages ok) · `go test ./... -race` (green).
+
+Per-package statement coverage at delivery (selected; `go test ./... -cover`):
+docutil 97.6 · schemas 99.1 · state 92.2 · globs 90.8 · verify-tier files 90–100 ·
+policy 95.7 · openrouter 100 · drift 91.0 · audit 90.7 · evaluation 90.4 · feedback 93.4 ·
+baselines 90.1 · statemachine 88.9 · testkit 91.4 · orchestrator 75.2 · gitpr 85.6 ·
+cli 77.4 · action 78.2 · githubapp 78.5. Remaining gap is documented per package in the
+test-file headers (TS assertions pinned behaviorally instead of textually where Go
+shapes differ; typed-error-passthrough returns are exercised but not asserted).
+
+Deliverable: branch `migration/typescript-to-go` → PR to `main`.
 
 ## 6. Deviations from the TypeScript implementation
 
-- **DEV-1 (planned):** `analyzer-typescript` uses tree-sitter in TS. Go has
-  no tree-sitter binding without CGO; the Go port implements an equivalent
-  lightweight TypeScript/TSX parser (exports, signatures, comments) with the
-  same change-classification output. If any classification cannot be
-  reproduced exactly it is documented here and routed conservatively
-  (fail-closed → REVIEW) per D14.
-- **DEV-2 (planned):** `picomatch` is replaced by `internal/globs`, a
-  Go glob engine implementing the picomatch semantics used by docSync
-  manifests (`**`, `*`, `?`, braces, character classes, negation). The
-  manifest test corpus is ported to keep behavior pinned.
-- Additional deviations are appended here with rationale as waves land.
+- **DEV-1:** `analyzer-typescript` (tree-sitter in TS) → `internal/analyzers/tstool`
+  ships a lexer + statement/member scanner reproducing the tree-sitter query's
+  matches (same name/kind/line/signature bodies, same in-scope coverage model and
+  declared gaps). The ported A5 corpus study reproduces the recorded verdict exactly
+  (typescript 7/5/4, recall 0.8; yaml 1/1/1; gaps `body-only-change`; review
+  `rename-exported`). Decorators are excluded from member signatures (conservative:
+  a metadata decorator change cannot fire a spurious `signature` change).
+- **DEV-2:** `picomatch` → `internal/globs`, a Go glob→regexp engine. Differential-
+  tested against real picomatch@4 (`{dot:true, windows:false}`) over 179,707
+  (pattern, path) pairs: 179,566 identical (99.92%); the remaining 141 are constructs
+  docSync never uses (negated extglob `!(x)`, multi-rune brace ranges). Anchoring,
+  trailing-slash, dotfile, brace, negation and literal-equality semantics are
+  byte-identical, as are the guard and specificity messages.
+- **DEV-3 (YAML bridge):** YAML decode funnels YAML → generic → JSON → struct, making
+  json tags the single source of key names for both wire formats (CONVENTIONS) and
+  enabling strict unknown-key rejection in YAML exactly as in JSON. A yaml.Node walk
+  (not plain unmarshal) preserves exact scalar text — in particular timestamp
+  literals lose their `.000` fraction through yaml.v3's implicit time.Time typing.
+  `schemas.MarshalJSONKeysYAML` is the writer side of the same bridge.
+- **DEV-4 (parallel scheduling):** Go's worker pools are truly parallel where the TS
+  pool was a single-threaded async chain, so per-stage event ORDER and how many chunks
+  land before a CAS/abort signal is scheduling-dependent. Tests pin the invariants
+  (subset + once-only + fail-closed) rather than a specific count; the pinned
+  assertions are annotated where this applies (e.g. audit incremental CAS-loser,
+  orchestrator writer pool).
+- **DEV-5 (error-class identity):** TS error classes become typed coded errors with
+  preserved codes/messages; where the TS suite asserted `instanceof`, the Go tests
+  assert the code and message (structural equality instead of class identity, e.g.
+  GitHub error hierarchies).
+- **DEV-6 (seams retired):** the declared integration seams from W7/W8 (model-ports
+  builder, pr-flow runner, audit runner, action/githubapp pipeline runtimes) are now
+  bound to the landed adapters; the offline path and config lanes remain fully tested
+  without network.
+- **DEV-7 (schema yaml tags):** a few schema structs (e.g. `ClaimSource`) carry only
+  json tags; through the DEV-3 bridge that is sufficient and the redundant yaml tags
+  are inert.
 
 ## 7. Requirement traceability
 

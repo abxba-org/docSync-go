@@ -122,10 +122,15 @@ func LoadAndValidateManifest(repoRoot string, options ManifestValidateOptions) (
 		return ManifestValidationResult{Diagnostics: diagnostics}, nil
 	}
 
-	// Strict-schema unknown keys (OD-R01). The YAML decoder drops unknown
-	// keys, so walk the AST explicitly — the same place zod's strictObject
-	// reports them — before the typed schema validation below.
-	diagnostics = append(diagnostics, unknownKeyDiagnostics(&doc)...)
+	// Strict-schema unknown keys (OD-R01). The AST walk reports them at their
+	// exact line; when any exist the run fails closed there (the same place
+	// zod's strictObject surfaces its first issue) — the typed schema parse
+	// below is skipped so the line-precise diagnostic is THE hard error.
+	if unknownKeys := unknownKeyDiagnostics(&doc); len(unknownKeys) > 0 {
+		diagnostics = append(diagnostics, unknownKeys...)
+		sortManifestDiagnostics(diagnostics)
+		return ManifestValidationResult{Diagnostics: diagnostics}, nil
+	}
 
 	// Schema validation with line-precise issue mapping.
 	manifest, parseErr := schemas.ParseManifest(source)

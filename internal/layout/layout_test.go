@@ -441,7 +441,7 @@ func TestAssertLayoutOkRendersLinePreciseError(t *testing.T) {
 	require.ErrorAs(t, err, &layoutErr)
 	assert.Equal(t, layout.EDOCSYNC_LAYOUT, layoutErr.Code())
 	assert.Equal(t,
-		"state/rogue.json: state/ must contain only the canonical state entries (expected .docsync/state/ containing only baselines/, claims/, docs/, runs/ (directories) and audit-cursor (files))",
+		"state/rogue.json: state/ must contain only the canonical state entries (expected .docsync/state/ containing only baselines/, claims/, docs/, runs/ (directories) and audit-cursor, fix-run-records.jsonl, incidents.jsonl (files))",
 		layoutErr.Render())
 }
 
