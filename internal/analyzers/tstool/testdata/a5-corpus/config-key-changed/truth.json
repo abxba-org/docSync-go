@@ -1,0 +1,6 @@
+{
+  "caseId": "config-key-changed",
+  "language": "yaml",
+  "truth": "behavioral",
+  "note": "server.port resolved value changed - config proxy via core diffConfigKeys"
+}

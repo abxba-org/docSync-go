@@ -68,34 +68,34 @@ var VerificationCheckIds = []string{
 
 // CheckTier is the frozen check-id → tier mapping.
 var CheckTier = map[string]int{
-	"patch-applies-cleanly":              Tier1,
-	"manifest-allowlist-only":            Tier1,
-	"ownership-floor":                    Tier1,
-	"minimality-bound":                   Tier1,
-	"whole-document-rewrite":             Tier1,
-	"structural-integrity":               Tier1,
-	"link-resolution":                    Tier1,
-	"examples-parse":                     Tier1,
-	"claim-decomposition":                Tier2,
-	"claim-anchor-binding":               Tier2,
-	"head-verification":                  Tier2,
-	"over-deletion-guard":                Tier2,
-	"contract-aware-check":               Tier2,
-	"coverage-defect":                    Tier2,
-	"behavioral-predicate-unverified":    Tier2,
-	"cross-patch-consistency":            Tier2,
-	"judge-second-pass":                  Tier3,
-	"judge-independence":                 Tier3,
+	"patch-applies-cleanly":           Tier1,
+	"manifest-allowlist-only":         Tier1,
+	"ownership-floor":                 Tier1,
+	"minimality-bound":                Tier1,
+	"whole-document-rewrite":          Tier1,
+	"structural-integrity":            Tier1,
+	"link-resolution":                 Tier1,
+	"examples-parse":                  Tier1,
+	"claim-decomposition":             Tier2,
+	"claim-anchor-binding":            Tier2,
+	"head-verification":               Tier2,
+	"over-deletion-guard":             Tier2,
+	"contract-aware-check":            Tier2,
+	"coverage-defect":                 Tier2,
+	"behavioral-predicate-unverified": Tier2,
+	"cross-patch-consistency":         Tier2,
+	"judge-second-pass":               Tier3,
+	"judge-independence":              Tier3,
 }
 
 // VerificationClaimStatus values.
 const (
-	ClaimVerdictSupported             = "supported"
-	ClaimVerdictMismatched            = "mismatched"
-	ClaimVerdictUnanchored            = "unanchored"
-	ClaimVerdictOverDeleted           = "over-deleted"
-	ClaimVerdictBehavioralUnverified  = "behavioral-unverified"
-	ClaimVerdictUnchecked             = "unchecked"
+	ClaimVerdictSupported            = "supported"
+	ClaimVerdictMismatched           = "mismatched"
+	ClaimVerdictUnanchored           = "unanchored"
+	ClaimVerdictOverDeleted          = "over-deleted"
+	ClaimVerdictBehavioralUnverified = "behavioral-unverified"
+	ClaimVerdictUnchecked            = "unchecked"
 )
 
 // VerificationClaimStatusValues lists all per-claim statuses.
@@ -106,8 +106,8 @@ var VerificationClaimStatusValues = []string{
 
 // AutoBlockReason values (OD-R09).
 const (
-	AutoBlockUnanchoredClaims        = "unanchored-claims"
-	AutoBlockBehavioralPredicate     = "behavioral-predicate-unverified"
+	AutoBlockUnanchoredClaims    = "unanchored-claims"
+	AutoBlockBehavioralPredicate = "behavioral-predicate-unverified"
 )
 
 // AutoBlockReasonValues lists reasons in canonical order.
@@ -120,17 +120,17 @@ var VerificationJudgeQuestionIds = []string{
 
 // VerificationCheck is one check record (ARCH §4.8: every check emits a record).
 type VerificationCheck struct {
-	ID      string   `json:"id"`
-	Status  string   `json:"status"`
-	Detail  *string  `json:"detail,omitempty"`
-	Inputs  []string `json:"inputs,omitempty"`
+	ID     string   `json:"id"`
+	Status string   `json:"status"`
+	Detail *string  `json:"detail,omitempty"`
+	Inputs []string `json:"inputs,omitempty"`
 }
 
 // VerificationTierReport is one tier's status + checks.
 type VerificationTierReport struct {
 	Tier   int                 `json:"tier"`
 	Status string              `json:"status"`
-	Checks []VerificationCheck  `json:"checks"`
+	Checks []VerificationCheck `json:"checks"`
 }
 
 // VerificationClaim is a per-claim verification outcome (PLAN §5.3).
@@ -149,12 +149,12 @@ type VerificationJudgeAnswer struct {
 // VerificationJudge is the independent judge outcome with the full model
 // binding pin (D3): model is the actually-routed model.
 type VerificationJudge struct {
-	Model          string                            `json:"model"`
-	RequestedModel *string                           `json:"requested_model,omitempty"`
-	Provider       *string                           `json:"provider,omitempty"`
-	Verdict        VerificationVerdict               `json:"verdict"`
+	Model          string                             `json:"model"`
+	RequestedModel *string                            `json:"requested_model,omitempty"`
+	Provider       *string                            `json:"provider,omitempty"`
+	Verdict        VerificationVerdict                `json:"verdict"`
 	Questions      map[string]VerificationJudgeAnswer `json:"questions,omitempty"`
-	Reasons        []string                          `json:"reasons,omitempty"`
+	Reasons        []string                           `json:"reasons,omitempty"`
 }
 
 // VerificationJudgeAbstain is a first-class judge abstention (invariant 9).
@@ -165,19 +165,19 @@ type VerificationJudgeAbstain struct {
 
 // VerificationReport is the Phase-4 verification result for one document.
 type VerificationReport struct {
-	Schema            string                    `json:"schema"`
-	RunID             string                    `json:"run_id"`
-	DocPath           string                    `json:"doc_path"`
-	PatchRef          string                    `json:"patch_ref"`
-	Tiers             []VerificationTierReport  `json:"tiers"`
-	Claims            []VerificationClaim       `json:"claims"`
-	Verdict           VerificationVerdict       `json:"verdict"`
-	AutoEligible      bool                      `json:"auto_eligible"`
-	AutoBlockReasons  []string                  `json:"auto_block_reasons"`
-	PolicyVersion     int                       `json:"policy_version"`
-	Judge             *VerificationJudge        `json:"judge,omitempty"`
-	JudgeAbstain      *VerificationJudgeAbstain `json:"judge_abstain,omitempty"`
-	CrossPatchConflict *bool                    `json:"cross_patch_conflict,omitempty"`
+	Schema             string                    `json:"schema"`
+	RunID              string                    `json:"run_id"`
+	DocPath            string                    `json:"doc_path"`
+	PatchRef           string                    `json:"patch_ref"`
+	Tiers              []VerificationTierReport  `json:"tiers"`
+	Claims             []VerificationClaim       `json:"claims"`
+	Verdict            VerificationVerdict       `json:"verdict"`
+	AutoEligible       bool                      `json:"auto_eligible"`
+	AutoBlockReasons   []string                  `json:"auto_block_reasons"`
+	PolicyVersion      int                       `json:"policy_version"`
+	Judge              *VerificationJudge        `json:"judge,omitempty"`
+	JudgeAbstain       *VerificationJudgeAbstain `json:"judge_abstain,omitempty"`
+	CrossPatchConflict *bool                     `json:"cross_patch_conflict,omitempty"`
 }
 
 // ResolveVerificationVerdict is the CANONICAL verdict mapping (OD-2):

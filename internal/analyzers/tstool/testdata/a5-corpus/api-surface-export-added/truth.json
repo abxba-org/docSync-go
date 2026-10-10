@@ -1,0 +1,6 @@
+{
+  "caseId": "api-surface-export-added",
+  "language": "typescript",
+  "truth": "behavioral",
+  "note": "new exported function — public API surface grows"
+}

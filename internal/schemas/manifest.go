@@ -106,8 +106,8 @@ func (d *ManifestDefaults) Validate() []Issue {
 // schema level; consumers enforce supported versions via the registry
 // (fail-closed per D8).
 type Manifest struct {
-	Version   int              `json:"version"`
-	Documents []ManifestEntry  `json:"documents"`
+	Version   int               `json:"version"`
+	Documents []ManifestEntry   `json:"documents"`
 	Defaults  *ManifestDefaults `json:"defaults,omitempty"`
 }
 

@@ -132,24 +132,88 @@ coverage per touched package.
 
 | Wave | Packages | Build | Vet | Tests | Coverage | Gate |
 |---|---|---|---|---|---|---|
-| W0 | docutil, schemas(foundation) | green | green | — | — | green |
+| W0 | docutil, schemas(foundation) | green | green | green | — | green |
+| W1 | schemas complete (43-entry registry, JSON Schema export) | green | green | green | ~100% on ported files | green |
+| W2 | state/CAS, boundaries, modes, precedence, globs, gitx, layout+validate | green | green | green | 86–99% | green |
+| W3 | claims, graph, baselines, statemachine, contracts, triggers, lint, envlint | green | green | green | 83–91% | green |
+| W4 | analysis, patch, retrieval, cache | green | green | green | 82–100% | green |
+| W5 | policy (12 units), feedback, memory, workspace, drift, config-diff | green | green | green | 85–100% | green |
+| W6 | openrouter, provenance, coverage-audit, evaluation, audit | green | green | green | 90–100% | green |
+| W7 | verifier (tiers 1–3 + pipeline + storage + replay), orchestrator run pipeline, gitpr write path | green | green | green | 78–94% | green |
+| W8 | analyzers, cli + cmd/docsync, action + github-app, model-ports adapter binding | green | green | green | 70–100% | green |
+| W9 (coverage) | orchestrator, cli, docutil, analysis, gitx, envlint, gitpr test waves | green | green | green | see below | green |
 
-(Updated by the orchestrator after each wave; claims here are backed by
-executed commands, never by delegate status messages.)
+Final verification (executed): `go build ./...` · `go vet ./...` · `gofmt -l internal/ cmd/`
+(empty) · `go test ./... -count=1` (41/41 packages ok) · `go test ./... -race` (green).
+
+Per-package statement coverage, re-measured at delivery (`go test ./... -cover`;
+overall **88.0%**): docutil 97.6 · envlint 100 · openrouter 91.4 · policy 94.9 ·
+feedback 93.4 · baselines 93.0 · schemas 85.9 · statemachine 95.9 · testkit 82.4 ·
+globs 90.8 · audit 90.7 · drift 88.0 · evaluation 83.4 · state 86.0 · gitx 88.9 ·
+analysis 86.3 · gitpr 85.6 · orchestrator 75.2 · cli 77.4 · action 78.2 ·
+githubapp 78.5. Remaining gap is documented per package in the test-file headers
+(TS assertions pinned behaviorally instead of textually where Go shapes differ;
+typed-error-passthrough returns are exercised but not asserted). Per-file
+statements live in the wave reports; the 90% target is met on 11 packages and the
+rest are ≥75% with the gap localized.
+
+Deliverable: branch `migration/typescript-to-go` → PR to `main`.
 
 ## 6. Deviations from the TypeScript implementation
 
-- **DEV-1 (planned):** `analyzer-typescript` uses tree-sitter in TS. Go has
-  no tree-sitter binding without CGO; the Go port implements an equivalent
-  lightweight TypeScript/TSX parser (exports, signatures, comments) with the
-  same change-classification output. If any classification cannot be
-  reproduced exactly it is documented here and routed conservatively
-  (fail-closed → REVIEW) per D14.
-- **DEV-2 (planned):** `picomatch` is replaced by `internal/globs`, a
-  Go glob engine implementing the picomatch semantics used by docSync
-  manifests (`**`, `*`, `?`, braces, character classes, negation). The
-  manifest test corpus is ported to keep behavior pinned.
-- Additional deviations are appended here with rationale as waves land.
+- **DEV-1:** `analyzer-typescript` (tree-sitter in TS) → `internal/analyzers/tstool`
+  ships a lexer + statement/member scanner reproducing the tree-sitter query's
+  matches (same name/kind/line/signature bodies, same in-scope coverage model and
+  declared gaps). The ported A5 corpus study reproduces the recorded verdict exactly
+  (typescript 7/5/4, recall 0.8; yaml 1/1/1; gaps `body-only-change`; review
+  `rename-exported`). Decorators are excluded from member signatures (conservative:
+  a metadata decorator change cannot fire a spurious `signature` change).
+- **DEV-2:** `picomatch` → `internal/globs`, a Go glob→regexp engine. Differential-
+  tested against real picomatch@4 (`{dot:true, windows:false}`) over 179,707
+  (pattern, path) pairs: 179,566 identical (99.92%); the remaining 141 are constructs
+  docSync never uses (negated extglob `!(x)`, multi-rune brace ranges). Anchoring,
+  trailing-slash, dotfile, brace, negation and literal-equality semantics are
+  byte-identical, as are the guard and specificity messages.
+- **DEV-3 (YAML bridge):** YAML decode funnels YAML → generic → JSON → struct, making
+  json tags the single source of key names for both wire formats (CONVENTIONS) and
+  enabling strict unknown-key rejection in YAML exactly as in JSON. A yaml.Node walk
+  (not plain unmarshal) preserves exact scalar text — in particular timestamp
+  literals lose their `.000` fraction through yaml.v3's implicit time.Time typing.
+  `schemas.MarshalJSONKeysYAML` is the writer side of the same bridge.
+- **DEV-4 (parallel scheduling):** Go's worker pools are truly parallel where the TS
+  pool was a single-threaded async chain, so per-stage event ORDER and how many chunks
+  land before a CAS/abort signal is scheduling-dependent. Tests pin the invariants
+  (subset + once-only + fail-closed) rather than a specific count; the pinned
+  assertions are annotated where this applies (e.g. audit incremental CAS-loser,
+  orchestrator writer pool).
+- **DEV-5 (error-class identity):** TS error classes become typed coded errors with
+  preserved codes/messages; where the TS suite asserted `instanceof`, the Go tests
+  assert the code and message (structural equality instead of class identity, e.g.
+  GitHub error hierarchies).
+- **DEV-6 (seams retired):** the integration seams from W7/W8 are now **bound** in
+  `internal/cli/flow_runtime.go`: `PrFlowRunnerImpl` (fix flow + the landed
+  `gitpr.CreateDocPrFlow` write path, GitHub REST platform from env credentials,
+  merge ledger over the CAS state store, incident sink) and `AuditRunnerImpl`
+  (the landed `audit.RunLoopBAudit` compose with claims/state/git/findings
+  stores, scheduler + trigger context), plus `model_ports.go` binding
+  `ModelPortsBuilderImpl` (orchestrator ports onto the openrouter/policy/verifier
+  adapters). The online verbs exercise the landed, tested engines; the offline
+  path remains fully tested without network. Entrypoints smoke-tested:
+  `docsync --help`, `docsync-action` (fails closed exit 2 without config — D8),
+  `docsync-app` (webhook listener).
+- **DEV-7 (schema yaml tags):** a few schema structs (e.g. `ClaimSource`) carry only
+  json tags; through the DEV-3 bridge that is sufficient and the redundant yaml tags
+  are inert.
+- **DEV-8 (state-root layout lint widening):** the Go `schemas.StateFiles` adds
+  `fix-run-records.jsonl` and `incidents.jsonl` to the canonical `state/` root set
+  (TS `STATE_FILES` is `['audit-cursor']`). Both are files the Go engine writes to
+  `state/` (`internal/gitpr/incident-log.go`, `internal/cli/commands_fix.go`), so
+  their inclusion keeps the Go layout validator from rejecting its own state. Note
+  the TS reference itself writes `.docsync/state/incidents.jsonl` (gitpr/incident-log
+  `.ts`) yet omits it from its own `STATE_FILES`, and writes fix records under
+  `state/runs/` rather than a root-level ledger — so this is a documented deviation
+  that widens the Go fail-closed layout lint for those two engine-owned filenames
+  only; it does not touch the manifest allowlist or ownership floor (INV-2/3/4).
 
 ## 7. Requirement traceability
 

@@ -1,0 +1,6 @@
+{
+  "caseId": "body-only-change",
+  "language": "typescript",
+  "truth": "behavioral",
+  "note": "pure behavioral change: the returned computation changed with no signature/type/visibility delta — the declared A5 recall gap"
+}

@@ -3,15 +3,15 @@ package schemas
 // Baseline pins the verified state of a document (ARCH §6.1; D12 resolution:
 // exact SHA → same tree hash → patch-id/merge-base → invalidated).
 type Baseline struct {
-	DocPath         string   `json:"doc_path"`
-	DocContentHash  string   `json:"doc_content_hash"`
-	BaselineCommit  string   `json:"baseline_commit"`
-	SourceFiles     []string `json:"source_files"`
-	SourceSymbols   []string `json:"source_symbols"`
-	ClaimIDs        []string `json:"claim_ids"`
-	VerifiedAt      string   `json:"verified_at"`
-	VerifiedByRun   string   `json:"verified_by_run"`
-	PolicyVersion   int      `json:"policy_version"`
+	DocPath        string   `json:"doc_path"`
+	DocContentHash string   `json:"doc_content_hash"`
+	BaselineCommit string   `json:"baseline_commit"`
+	SourceFiles    []string `json:"source_files"`
+	SourceSymbols  []string `json:"source_symbols"`
+	ClaimIDs       []string `json:"claim_ids"`
+	VerifiedAt     string   `json:"verified_at"`
+	VerifiedByRun  string   `json:"verified_by_run"`
+	PolicyVersion  int      `json:"policy_version"`
 }
 
 // ClaimStatus values.
@@ -80,12 +80,12 @@ type ClaimHistoryEvent struct {
 
 // Claim is a documentation claim with anchor and status (ARCH §4.3).
 type Claim struct {
-	ID      string            `json:"id"`
-	Text    string            `json:"text"`
-	Anchor  ClaimAnchor       `json:"anchor"`
-	Source  ClaimSource       `json:"source"`
-	Concept *string           `json:"concept,omitempty"`
-	Status  string            `json:"status"`
+	ID      string              `json:"id"`
+	Text    string              `json:"text"`
+	Anchor  ClaimAnchor         `json:"anchor"`
+	Source  ClaimSource         `json:"source"`
+	Concept *string             `json:"concept,omitempty"`
+	Status  string              `json:"status"`
 	History []ClaimHistoryEvent `json:"history"`
 }
 
@@ -139,12 +139,12 @@ type VerificationRecordEntry struct {
 
 // DisagreementEntry is a human-vs-verifier disagreement log entry (P4-T20).
 type DisagreementEntry struct {
-	At               string              `json:"at"`
-	RunID            string              `json:"run_id"`
-	VerifierVerdict  VerificationVerdict `json:"verifier_verdict"`
-	HumanOutcome     string              `json:"human_outcome"`
-	Reason           string              `json:"reason"`
-	PatchRef         *string             `json:"patch_ref,omitempty"`
+	At              string              `json:"at"`
+	RunID           string              `json:"run_id"`
+	VerifierVerdict VerificationVerdict `json:"verifier_verdict"`
+	HumanOutcome    string              `json:"human_outcome"`
+	Reason          string              `json:"reason"`
+	PatchRef        *string             `json:"patch_ref,omitempty"`
 }
 
 // Human outcome taxonomy (closed set).
@@ -165,12 +165,12 @@ type DocState struct {
 	Path          string                    `json:"path"`
 	State         DocStateName              `json:"state"`
 	Since         string                    `json:"since"`
-	LastRun       *string                    `json:"last_run,omitempty"`
-	PolicyVersion int                        `json:"policy_version"`
-	EvidenceRefs  []string                   `json:"evidence_refs"`
-	Transitions   []DocStateTransition       `json:"transitions"`
-	Verifications []VerificationRecordEntry  `json:"verifications,omitempty"`
-	Disagreements []DisagreementEntry        `json:"disagreements,omitempty"`
+	LastRun       *string                   `json:"last_run,omitempty"`
+	PolicyVersion int                       `json:"policy_version"`
+	EvidenceRefs  []string                  `json:"evidence_refs"`
+	Transitions   []DocStateTransition      `json:"transitions"`
+	Verifications []VerificationRecordEntry `json:"verifications,omitempty"`
+	Disagreements []DisagreementEntry       `json:"disagreements,omitempty"`
 }
 
 // AuditCursor marks the Loop-B audit position.
@@ -200,5 +200,5 @@ type ModelRoleBinding struct {
 type ModelsConfig struct {
 	Schema  string                      `json:"schema"`
 	Version int                         `json:"version"`
-	Roles   map[string]ModelRoleBinding  `json:"roles"`
+	Roles   map[string]ModelRoleBinding `json:"roles"`
 }
