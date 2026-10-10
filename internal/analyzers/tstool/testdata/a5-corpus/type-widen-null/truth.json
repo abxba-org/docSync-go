@@ -1,0 +1,6 @@
+{
+  "caseId": "type-widen-null",
+  "language": "typescript",
+  "truth": "behavioral",
+  "note": "idempotencyKey: string to string | null — the V-P11-1 invalidation shape"
+}

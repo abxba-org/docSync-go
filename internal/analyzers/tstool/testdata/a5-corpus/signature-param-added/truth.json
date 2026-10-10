@@ -1,0 +1,6 @@
+{
+  "caseId": "signature-param-added",
+  "language": "typescript",
+  "truth": "behavioral",
+  "note": "parameter added to an exported function"
+}

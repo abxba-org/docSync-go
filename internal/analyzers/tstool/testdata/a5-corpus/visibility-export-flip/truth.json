@@ -1,0 +1,6 @@
+{
+  "caseId": "visibility-export-flip",
+  "language": "typescript",
+  "truth": "behavioral",
+  "note": "previously internal function became exported"
+}

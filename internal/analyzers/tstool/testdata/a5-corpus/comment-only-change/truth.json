@@ -1,0 +1,6 @@
+{
+  "caseId": "comment-only-change",
+  "language": "typescript",
+  "truth": "non-behavioral",
+  "note": "comment only — externally observable behavior provably unchanged"
+}

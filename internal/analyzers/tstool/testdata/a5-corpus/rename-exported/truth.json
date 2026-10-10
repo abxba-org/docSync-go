@@ -1,0 +1,6 @@
+{
+  "caseId": "rename-exported",
+  "language": "typescript",
+  "truth": "uncertain",
+  "note": "exported rename: behavior-preserving refactor or a breaking surface change is not determinable from the fixture — routes REVIEW (D14)"
+}
