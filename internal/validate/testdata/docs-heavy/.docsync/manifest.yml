@@ -1,0 +1,45 @@
+# docSync manifest — docs-heavy fixture (P0-T17)
+
+# Maps exactly 6 of the 8 docs; docs/legacy/old-guide.md and docs/orphan.md are
+# deliberately UNMAPPED (D7 unknown-coverage fixture). Validated against
+# MANIFEST_SCHEMA by packages/core/test/fixtures.test.ts.
+version: 1
+defaults:
+  mode: suggest
+documents:
+  - path: docs/overview.md
+    mode: auto
+    sources:
+      - "src/**"
+    triggers:
+      - public_behavior
+  - path: docs/architecture.md
+    sources:
+      - "src/**"
+    triggers:
+      - architecture_change
+  - path: docs/operations.md
+    mode: human
+    sources:
+      - "src/**"
+    triggers:
+      - configuration_change
+    ignore:
+      - internal_refactor
+  - path: docs/onboarding.md
+    sources:
+      - "src/**"
+    triggers:
+      - public_behavior
+  - path: docs/api-reference.md
+    mode: auto
+    sources:
+      - "src/**"
+    triggers:
+      - api_change
+  - path: docs/release-notes.md
+    mode: auto
+    sources:
+      - "src/**"
+    triggers:
+      - architecture_change

@@ -18,27 +18,27 @@ import (
 // exit code 2, runtime failure → exit code 3, etc.). Codes keep that
 // identity without class hierarchies.
 const (
-	CodeConfig    = "EDOCSYNC_CONFIG"
-	CodeManifest  = "EDOCSYNC_MANIFEST"
+	CodeConfig     = "EDOCSYNC_CONFIG"
+	CodeManifest   = "EDOCSYNC_MANIFEST"
 	CodeValidation = "EDOCSYNC_VALIDATION"
-	CodeState     = "EDOCSYNC_STATE"
-	CodeStateKey  = "EDOCSYNC_STATE_KEY"
-	CodeStateCAS  = "EDOCSYNC_STATE_CAS"
-	CodeSchema    = "EDOCSYNC_SCHEMA"
-	CodeGit       = "EDOCSYNC_GIT"
-	CodeModel     = "EDOCSYNC_MODEL"
-	CodeVerify    = "EDOCSYNC_VERIFY"
-	CodeGuard     = "EDOCSYNC_GUARD"
-	CodeIO        = "EDOCSYNC_IO"
-	CodeInternal  = "EDOCSYNC_INTERNAL"
+	CodeState      = "EDOCSYNC_STATE"
+	CodeStateKey   = "EDOCSYNC_STATE_KEY"
+	CodeStateCAS   = "EDOCSYNC_STATE_CAS"
+	CodeSchema     = "EDOCSYNC_SCHEMA"
+	CodeGit        = "EDOCSYNC_GIT"
+	CodeModel      = "EDOCSYNC_MODEL"
+	CodeVerify     = "EDOCSYNC_VERIFY"
+	CodeGuard      = "EDOCSYNC_GUARD"
+	CodeIO         = "EDOCSYNC_IO"
+	CodeInternal   = "EDOCSYNC_INTERNAL"
 )
 
 // Error is a coded error carrying an optional structured path (for
 // line-precise config diagnostics) and a wrapped cause.
 type Error struct {
-	Code string
-	Msg  string
-	Path []string // e.g. ["docs", 3] rendered as docs[3]
+	Code  string
+	Msg   string
+	Path  []string // e.g. ["docs", 3] rendered as docs[3]
 	Cause error
 }
 

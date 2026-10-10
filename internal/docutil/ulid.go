@@ -28,11 +28,11 @@ const (
 // randomness space (2^80 increments within one millisecond) wraps via
 // masking and is practically unreachable.
 type ULIDGenerator struct {
-	mu            sync.Mutex
-	lastTime      int64 // -1 = fresh
-	lastRandom    [ulidRandomBytes]byte
-	nowMs         func() int64
-	randBytes     func(n int) ([]byte, error)
+	mu         sync.Mutex
+	lastTime   int64 // -1 = fresh
+	lastRandom [ulidRandomBytes]byte
+	nowMs      func() int64
+	randBytes  func(n int) ([]byte, error)
 }
 
 // NewULIDGenerator returns a generator reading the wall clock and crypto/rand.
@@ -54,8 +54,8 @@ func NewULIDGenerator() *ULIDGenerator {
 // supplies the clock, rng supplies the random bytes.
 func NewULIDGeneratorWith(nowMs func() int64, rng func(n int) []byte) *ULIDGenerator {
 	return &ULIDGenerator{
-		lastTime: -1,
-		nowMs:    nowMs,
+		lastTime:  -1,
+		nowMs:     nowMs,
 		randBytes: func(n int) ([]byte, error) { return rng(n), nil },
 	}
 }

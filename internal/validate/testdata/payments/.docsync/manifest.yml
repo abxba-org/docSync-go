@@ -1,0 +1,29 @@
+# docSync manifest — payments fixture (P0-T17)
+
+# Schema-validated against MANIFEST_SCHEMA (@docsync/schemas) by
+# packages/core/test/fixtures.test.ts. Strict schema: no unknown keys, relative
+# POSIX paths, universal trigger vocabulary only.
+version: 1
+documents:
+  - path: docs/payments.md
+    mode: auto
+    sources:
+      - "src/payments/**"
+      - "src/api/payments/**"
+    triggers:
+      - public_behavior
+      - api_change
+    ignore:
+      - test_only
+      - internal_refactor
+  - path: docs/architecture.md
+    mode: suggest
+    sources:
+      - "src/**"
+    triggers:
+      - architecture_change
+  - path: docs/security.md
+    mode: locked
+    sources:
+      - "src/auth/**"
+      - "src/security/**"

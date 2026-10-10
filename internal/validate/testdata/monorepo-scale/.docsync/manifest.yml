@@ -1,0 +1,55 @@
+# docSync manifest — monorepo-scale fixture (P0-T17)
+
+# One suggest-mode doc per generated package; sources glob the whole package
+# tree (400 files). Validated against MANIFEST_SCHEMA by
+# packages/core/test/fixtures.test.ts.
+version: 1
+documents:
+  - path: docs/packages/a.md
+    mode: suggest
+    sources:
+      - "packages/a/src/**"
+    triggers:
+      - architecture_change
+  - path: docs/packages/b.md
+    mode: suggest
+    sources:
+      - "packages/b/src/**"
+    triggers:
+      - architecture_change
+  - path: docs/packages/c.md
+    mode: suggest
+    sources:
+      - "packages/c/src/**"
+    triggers:
+      - architecture_change
+  - path: docs/packages/d.md
+    mode: suggest
+    sources:
+      - "packages/d/src/**"
+    triggers:
+      - architecture_change
+  - path: docs/packages/e.md
+    mode: suggest
+    sources:
+      - "packages/e/src/**"
+    triggers:
+      - architecture_change
+  - path: docs/packages/f.md
+    mode: suggest
+    sources:
+      - "packages/f/src/**"
+    triggers:
+      - architecture_change
+  - path: docs/packages/g.md
+    mode: suggest
+    sources:
+      - "packages/g/src/**"
+    triggers:
+      - architecture_change
+  - path: docs/packages/h.md
+    mode: suggest
+    sources:
+      - "packages/h/src/**"
+    triggers:
+      - architecture_change
