@@ -146,13 +146,16 @@ coverage per touched package.
 Final verification (executed): `go build ./...` · `go vet ./...` · `gofmt -l internal/ cmd/`
 (empty) · `go test ./... -count=1` (41/41 packages ok) · `go test ./... -race` (green).
 
-Per-package statement coverage at delivery (selected; `go test ./... -cover`):
-docutil 97.6 · schemas 99.1 · state 92.2 · globs 90.8 · verify-tier files 90–100 ·
-policy 95.7 · openrouter 100 · drift 91.0 · audit 90.7 · evaluation 90.4 · feedback 93.4 ·
-baselines 90.1 · statemachine 88.9 · testkit 91.4 · orchestrator 75.2 · gitpr 85.6 ·
-cli 77.4 · action 78.2 · githubapp 78.5. Remaining gap is documented per package in the
-test-file headers (TS assertions pinned behaviorally instead of textually where Go
-shapes differ; typed-error-passthrough returns are exercised but not asserted).
+Per-package statement coverage, re-measured at delivery (`go test ./... -cover`;
+overall **88.0%**): docutil 97.6 · envlint 100 · openrouter 91.4 · policy 94.9 ·
+feedback 93.4 · baselines 93.0 · schemas 85.9 · statemachine 95.9 · testkit 82.4 ·
+globs 90.8 · audit 90.7 · drift 88.0 · evaluation 83.4 · state 86.0 · gitx 88.9 ·
+analysis 86.3 · gitpr 85.6 · orchestrator 75.2 · cli 77.4 · action 78.2 ·
+githubapp 78.5. Remaining gap is documented per package in the test-file headers
+(TS assertions pinned behaviorally instead of textually where Go shapes differ;
+typed-error-passthrough returns are exercised but not asserted). Per-file
+statements live in the wave reports; the 90% target is met on 11 packages and the
+rest are ≥75% with the gap localized.
 
 Deliverable: branch `migration/typescript-to-go` → PR to `main`.
 
@@ -187,13 +190,30 @@ Deliverable: branch `migration/typescript-to-go` → PR to `main`.
   preserved codes/messages; where the TS suite asserted `instanceof`, the Go tests
   assert the code and message (structural equality instead of class identity, e.g.
   GitHub error hierarchies).
-- **DEV-6 (seams retired):** the declared integration seams from W7/W8 (model-ports
-  builder, pr-flow runner, audit runner, action/githubapp pipeline runtimes) are now
-  bound to the landed adapters; the offline path and config lanes remain fully tested
-  without network.
+- **DEV-6 (seams retired):** the integration seams from W7/W8 are now **bound** in
+  `internal/cli/flow_runtime.go`: `PrFlowRunnerImpl` (fix flow + the landed
+  `gitpr.CreateDocPrFlow` write path, GitHub REST platform from env credentials,
+  merge ledger over the CAS state store, incident sink) and `AuditRunnerImpl`
+  (the landed `audit.RunLoopBAudit` compose with claims/state/git/findings
+  stores, scheduler + trigger context), plus `model_ports.go` binding
+  `ModelPortsBuilderImpl` (orchestrator ports onto the openrouter/policy/verifier
+  adapters). The online verbs exercise the landed, tested engines; the offline
+  path remains fully tested without network. Entrypoints smoke-tested:
+  `docsync --help`, `docsync-action` (fails closed exit 2 without config — D8),
+  `docsync-app` (webhook listener).
 - **DEV-7 (schema yaml tags):** a few schema structs (e.g. `ClaimSource`) carry only
   json tags; through the DEV-3 bridge that is sufficient and the redundant yaml tags
   are inert.
+- **DEV-8 (state-root layout lint widening):** the Go `schemas.StateFiles` adds
+  `fix-run-records.jsonl` and `incidents.jsonl` to the canonical `state/` root set
+  (TS `STATE_FILES` is `['audit-cursor']`). Both are files the Go engine writes to
+  `state/` (`internal/gitpr/incident-log.go`, `internal/cli/commands_fix.go`), so
+  their inclusion keeps the Go layout validator from rejecting its own state. Note
+  the TS reference itself writes `.docsync/state/incidents.jsonl` (gitpr/incident-log
+  `.ts`) yet omits it from its own `STATE_FILES`, and writes fix records under
+  `state/runs/` rather than a root-level ledger — so this is a documented deviation
+  that widens the Go fail-closed layout lint for those two engine-owned filenames
+  only; it does not touch the manifest allowlist or ownership floor (INV-2/3/4).
 
 ## 7. Requirement traceability
 

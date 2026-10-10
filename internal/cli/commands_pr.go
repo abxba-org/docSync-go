@@ -39,7 +39,7 @@ type PrOptions struct {
 	// Transport is the model transport injection seam (recorded doubles, OD-2).
 	Transport any
 	// Flow (tests) injects the pr flow runner directly, bypassing the core
-	// doc-PR flow (declared seam).
+	// doc-PR flow (bound in flow_runtime.go).
 	Flow func(ctx context.Context, input *PrFlowInput) (*PrPayload, error)
 }
 
@@ -341,12 +341,11 @@ func RunPr(args *ParsedInvocation, io CliIo, options PrOptions) DocsyncExitCode 
 		return ExitConfig
 	}
 
-	/* 5. Run the composed fix + doc-PR flow (declared seam). */
+	/* 5. Run the composed fix + doc-PR flow (bound in flow_runtime.go). */
 	runner := options.Flow
 	if runner == nil {
 		if PrFlowRunnerImpl == nil {
-			io.Stderr(prPrefix + " the core doc-PR flow is not bound in this migration unit " +
-				"(declared seam, fail closed D14) — await the orchestrator rebind (TODO doc-pr-flow)")
+			io.Stderr(prPrefix + " the core doc-PR flow is not bound (internal wiring defect, fail closed D14)")
 			return ExitRuntime
 		}
 		runner = PrFlowRunnerImpl
@@ -436,6 +435,5 @@ func renderPrRunFailure(err error, io CliIo) DocsyncExitCode {
 }
 
 // PrFlowRunnerImpl is the production pr flow runner (fix flow + core doc-PR
-// flow). DECLARED SEAM: nil until the gitpr.CreateDocPrFlow + re-verify + capture
-// wiring is rebound (orchestrator). TODO(doc-pr-flow).
+// flow); bound at init in flow_runtime.go.
 var PrFlowRunnerImpl func(ctx context.Context, input *PrFlowInput) (*PrPayload, error)

@@ -94,9 +94,8 @@ type AuditRunnerInput struct {
 	Advisories  []string
 }
 
-// AuditRunnerImpl runs the loop-B audit engine + org-report. DECLARED SEAM: nil
-// until the internal/audit engine wiring is rebound (orchestrator). While nil a
-// valid audit run fails closed (D14, exit 3).
+// AuditRunnerImpl runs the loop-B audit engine + org-report; bound at init in
+// flow_runtime.go. While nil a valid audit run fails closed (D14, exit 3).
 var AuditRunnerImpl func(ctx context.Context, input AuditRunnerInput) (AuditRunResult, error)
 
 // parseIntFlag parses a `*string` flag to a positive int, falling back when
@@ -204,10 +203,9 @@ func RunAudit(args *ParsedInvocation, io CliIo, options AuditOptions) DocsyncExi
 		runID = string(AuditTriggerNightly) + ":" + repoName
 	}
 
-	/* 2. The loop-B engine run (declared seam). */
+	/* 2. The loop-B engine run (bound in flow_runtime.go). */
 	if AuditRunnerImpl == nil {
-		io.Stderr(auditPrefix + " loop-B audit engine is not bound in this migration unit " +
-			"(declared seam, fail closed D14) — await the orchestrator rebind (TODO loop-b-engine)")
+		io.Stderr(auditPrefix + " loop-B audit engine is not bound (internal wiring defect, fail closed D14)")
 		return ExitRuntime
 	}
 	result, err := AuditRunnerImpl(ctx, AuditRunnerInput{

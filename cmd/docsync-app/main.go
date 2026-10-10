@@ -49,7 +49,7 @@ func main() {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/webhook", githubapp.ServeAppWebhook(app))
 
-	log.Printf("docsync-app: webhook surface listening on :%s at /webhook (fail-closed until internal/cli lands)", port)
+	log.Printf("docsync-app: webhook surface listening on :%s at /webhook", port)
 	if err := http.ListenAndServe(":"+port, mux); err != nil {
 		log.Fatalf("docsync-app: server failed: %v", err)
 	}
