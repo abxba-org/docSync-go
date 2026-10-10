@@ -1,0 +1,8 @@
+# Binaries
+/bin/
+*.exe
+*.test
+*.out
+coverage/
+dist/
+.DS_Store
