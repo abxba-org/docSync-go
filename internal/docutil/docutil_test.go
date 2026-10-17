@@ -19,12 +19,12 @@ func TestULIDDeterministic(t *testing.T) {
 	// Ported from core/test/ulid.test.ts: fixed clock + deterministic rng ⇒
 	// fully deterministic ULIDs; with reset the sequence restarts.
 	var ms int64 = 1_700_000_000_000
-	gen := docutil.NewULIDGeneratorWith(func() int64 { return ms }, func(n int) []byte {
+	gen := docutil.NewULIDGeneratorWith(func() int64 { return ms }, func(n int) ([]byte, error) {
 		out := make([]byte, n)
 		for i := range out {
 			out[i] = byte(i + 1)
 		}
-		return out
+		return out, nil
 	})
 	first, err := gen.Generate()
 	require.NoError(t, err)
@@ -43,9 +43,9 @@ func TestULIDDeterministic(t *testing.T) {
 func TestULIDMonotonicAcrossClockSteps(t *testing.T) {
 	steps := []int64{100, 50, 200, 10}
 	idx := 0
-	gen := docutil.NewULIDGeneratorWith(func() int64 { v := steps[idx%len(steps)]; idx++; return v }, func(n int) []byte {
+	gen := docutil.NewULIDGeneratorWith(func() int64 { v := steps[idx%len(steps)]; idx++; return v }, func(n int) ([]byte, error) {
 		out := make([]byte, n)
-		return out
+		return out, nil
 	})
 	prev := ""
 	for i := 0; i < 12; i++ {
@@ -60,7 +60,7 @@ func TestULIDMonotonicAcrossClockSteps(t *testing.T) {
 }
 
 func TestULIDRejectsOutOfRangeTimestamp(t *testing.T) {
-	gen := docutil.NewULIDGeneratorWith(func() int64 { return -1 }, func(n int) []byte { return make([]byte, n) })
+	gen := docutil.NewULIDGeneratorWith(func() int64 { return -1 }, func(n int) ([]byte, error) { return make([]byte, n), nil })
 	_, err := gen.Generate()
 	require.Error(t, err)
 }

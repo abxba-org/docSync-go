@@ -344,3 +344,20 @@ func TestProvenanceErrorTypesExposeCodedSurfaces(t *testing.T) {
 	assert.Equal(t, docutil.CodeGuard, secretErr.Code())
 	assert.Equal(t, docutil.CodeGuard, docutil.CodeOf(secretErr))
 }
+
+func TestCOV_PROVENANCE_ListSkipsForeignEntries(t *testing.T) {
+	// Foreign entries inside runs/ (no prov- prefix, or non-.json) are not
+	// run ids and must be skipped, never surfaced as records.
+	store, stateRoot := makeStore(t)
+	runsDir := filepath.Join(stateRoot, "runs")
+	require.NoError(t, os.MkdirAll(runsDir, 0o755))
+	require.NoError(t, os.WriteFile(filepath.Join(runsDir, "unrelated.txt"), []byte("x"), 0o644))
+	require.NoError(t, os.WriteFile(filepath.Join(runsDir, "prov-abc.json"), []byte("x"), 0o644))
+	require.NoError(t, os.WriteFile(filepath.Join(runsDir, "prov-def.json"), []byte("definitely-not-json"), 0o644))
+
+	ids, err := store.List()
+	require.NoError(t, err)
+	// The foreign entry is excluded; the prov-*.json stems survive (List only
+	// reads names, not content).
+	assert.Equal(t, []string{"abc", "def"}, ids)
+}

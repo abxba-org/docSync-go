@@ -29,12 +29,12 @@ func decodeTimeChars(t *testing.T, ulid string) int64 {
 
 // fixedRng returns the SAME deterministic bytes on every call, mirroring the
 // TS test's fixedRng.
-func fixedRng(n int) []byte {
+func fixedRng(n int) ([]byte, error) {
 	out := make([]byte, n)
 	for index := range out {
 		out[index] = byte((index*7 + 3) % 256)
 	}
-	return out
+	return out, nil
 }
 
 func TestUlidShapeAndSameMillisecondMonotonicity(t *testing.T) {

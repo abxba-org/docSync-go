@@ -154,7 +154,7 @@ type WriteDatasetResult struct {
 // default path — tests inject a deterministic byte source).
 type DatasetBuilderOptions struct {
 	Clock     func() int64
-	RandBytes func(n int) []byte
+	RandBytes func(n int) ([]byte, error)
 }
 
 // DatasetBuilder assembles eval cases from run records + hygiene labels,
@@ -171,13 +171,13 @@ func NewDatasetBuilder(opts DatasetBuilderOptions) (*DatasetBuilder, error) {
 	}
 	randBytes := opts.RandBytes
 	if randBytes == nil {
-		randBytes = func(n int) []byte {
+		randBytes = func(n int) ([]byte, error) {
 			buf := make([]byte, n)
 			if _, err := rand.Read(buf); err != nil {
 				// Unreachable in practice (crypto/rand on Linux); fail closed.
-				return make([]byte, n)
+				return make([]byte, n), nil
 			}
-			return buf
+			return buf, nil
 		}
 	}
 	return &DatasetBuilder{ulids: docutil.NewULIDGeneratorWith(opts.Clock, randBytes)}, nil

@@ -52,11 +52,11 @@ func NewULIDGenerator() *ULIDGenerator {
 
 // NewULIDGeneratorWith returns a deterministic generator for tests: nowMs
 // supplies the clock, rng supplies the random bytes.
-func NewULIDGeneratorWith(nowMs func() int64, rng func(n int) []byte) *ULIDGenerator {
+func NewULIDGeneratorWith(nowMs func() int64, rng func(n int) ([]byte, error)) *ULIDGenerator {
 	return &ULIDGenerator{
 		lastTime:  -1,
 		nowMs:     nowMs,
-		randBytes: func(n int) ([]byte, error) { return rng(n), nil },
+		randBytes: rng,
 	}
 }
 
