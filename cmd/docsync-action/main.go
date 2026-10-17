@@ -16,10 +16,21 @@ import (
 	"github.com/DUDE616/docSync-go/internal/action"
 )
 
-func main() {
+// osExit is the process-exit seam; main() routes through it so the entrypoint
+// logic can be exercised in-process without terminating the test binary.
+var osExit = os.Exit
+
+// run executes the action entrypoint logic and returns the process exit code.
+// main() exists only to translate that into os.Exit so the logic can be tested
+// in-process without terminating the test binary.
+func run(deps action.MainDeps) int {
 	// Env (INPUT_*/GITHUB_*), fs, and io default to the real process (OSEnv /
 	// OSFS / OSIO). NewDefaultPort stays unbound until the internal/cli
 	// composition wave lands.
-	result := action.RunMain(action.MainDeps{})
-	os.Exit(int(result.ExitCode))
+	result := action.RunMain(deps)
+	return int(result.ExitCode)
+}
+
+func main() {
+	osExit(run(action.MainDeps{}))
 }

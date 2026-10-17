@@ -500,6 +500,9 @@ func formatIssueText(issues []schemas.Issue) string {
 // formatIssueList renders a validation error's issues the same way (used by
 // versioning.go's rollback seam).
 func formatIssueList(err error) string {
+	if err == nil {
+		return ""
+	}
 	var validationErr *schemas.ValidationError
 	if errors.As(err, &validationErr) {
 		return formatIssueText(validationErr.Issues)

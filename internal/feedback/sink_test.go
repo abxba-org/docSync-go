@@ -190,7 +190,7 @@ func TestFeedbackRecorderStateDirGuard(t *testing.T) {
 			Sink:     sink,
 			EventIDs: docutil.NewULIDGeneratorWith(
 				func() int64 { return 0 },
-				func(n int) []byte { return make([]byte, n) },
+				func(n int) ([]byte, error) { return make([]byte, n), nil },
 			),
 		})
 		require.NoError(t, err)

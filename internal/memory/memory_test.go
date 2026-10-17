@@ -35,12 +35,12 @@ func fixedClock() string { return fixedNow }
 func deterministicULIDs() *docutil.ULIDGenerator {
 	return docutil.NewULIDGeneratorWith(
 		func() int64 { return 1_760_000_000_000 },
-		func(n int) []byte {
+		func(n int) ([]byte, error) {
 			out := make([]byte, n)
 			for i := range out {
 				out[i] = byte(i + 1)
 			}
-			return out
+			return out, nil
 		},
 	)
 }
@@ -1342,7 +1342,7 @@ func TestAppendRecordFailsClosedWhenIdMintFails(t *testing.T) {
 			v := steps[min(call, len(steps)-1)]
 			call++
 			return v
-		}, func(n int) []byte { return make([]byte, n) }),
+		}, func(n int) ([]byte, error) { return make([]byte, n), nil }),
 	})
 	require.NoError(t, err)
 	// First append mints with a valid timestamp; the contradict's failure
