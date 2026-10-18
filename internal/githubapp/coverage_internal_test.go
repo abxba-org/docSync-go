@@ -22,9 +22,9 @@ func TestCOV_GITHUBAPP_InternalHelpers(t *testing.T) {
 	})
 
 	t.Run("isSelfTrigger: all four rules", func(t *testing.T) {
-		assert.True(t, isSelfTrigger(strPtrP("bot"), nil, "bot"))               // actor identity only
-		assert.True(t, isSelfTrigger(strPtrP("bot"), strPtrP("feature"), "bot"))   // actor identity
-		assert.True(t, isSelfTrigger(nil, strPtrP("docsync/x"), "bot"))            // branch prefix, no actor
+		assert.True(t, isSelfTrigger(strPtrP("bot"), nil, "bot"))                   // actor identity only
+		assert.True(t, isSelfTrigger(strPtrP("bot"), strPtrP("feature"), "bot"))    // actor identity
+		assert.True(t, isSelfTrigger(nil, strPtrP("docsync/x"), "bot"))             // branch prefix, no actor
 		assert.False(t, isSelfTrigger(strPtrP("human"), strPtrP("feature"), "bot")) // neither
 	})
 
@@ -47,25 +47,35 @@ func TestCOV_GITHUBAPP_InternalHelpers(t *testing.T) {
 	})
 
 	t.Run("jsonWhole: all number kinds", func(t *testing.T) {
-		v, ok := jsonWhole(float64(3)); assert.True(t, ok); assert.Equal(t, int64(3), v)
-		v, ok = jsonWhole(float64(3.5)); assert.False(t, ok)
-		v, ok = jsonWhole(3); assert.True(t, ok); assert.Equal(t, int64(3), v)
-		v, ok = jsonWhole(int64(3)); assert.True(t, ok); assert.Equal(t, int64(3), v)
-		v, ok = jsonWhole("3"); assert.False(t, ok)
-		v, ok = jsonWhole(nil); assert.False(t, ok)
+		v, ok := jsonWhole(float64(3))
+		assert.True(t, ok)
+		assert.Equal(t, int64(3), v)
+		v, ok = jsonWhole(float64(3.5))
+		assert.False(t, ok)
+		v, ok = jsonWhole(3)
+		assert.True(t, ok)
+		assert.Equal(t, int64(3), v)
+		v, ok = jsonWhole(int64(3))
+		assert.True(t, ok)
+		assert.Equal(t, int64(3), v)
+		v, ok = jsonWhole("3")
+		assert.False(t, ok)
+		v, ok = jsonWhole(nil)
+		assert.False(t, ok)
 	})
 
 	t.Run("asStringPayloadNested: all path shapes", func(t *testing.T) {
-		assert.Nil(t, asStringPayloadNested(map[string]any{}))                        // empty path
+		assert.Nil(t, asStringPayloadNested(map[string]any{})) // empty path
 		assert.Equal(t, "v", *asStringPayloadNested(map[string]any{"a": map[string]any{"b": "v"}}, "a", "b"))
-		assert.Nil(t, asStringPayloadNested(map[string]any{"a": map[string]any{}}, "a", "b")) // intermediate nil
+		assert.Nil(t, asStringPayloadNested(map[string]any{"a": map[string]any{}}, "a", "b"))       // intermediate nil
 		assert.Nil(t, asStringPayloadNested(map[string]any{"a": map[string]any{"b": 7}}, "a", "b")) // final non-string
 		assert.Nil(t, asStringPayloadNested(map[string]any{"a": "notobj"}, "a", "b"))
 	})
 
 	t.Run("parsePullRequestContext: all shapes", func(t *testing.T) {
 		pr, ok := parsePullRequestContext(map[string]any{})
-		assert.False(t, ok); assert.Nil(t, pr)
+		assert.False(t, ok)
+		assert.Nil(t, pr)
 		pr, ok = parsePullRequestContext(map[string]any{"pull_request": map[string]any{}})
 		assert.False(t, ok)
 		pr, ok = parsePullRequestContext(map[string]any{"pull_request": map[string]any{"head": map[string]any{"sha": "abc", "ref": "feat"}}})
@@ -77,33 +87,43 @@ func TestCOV_GITHUBAPP_InternalHelpers(t *testing.T) {
 		pr, ok = parsePullRequestContext(map[string]any{"pull_request": map[string]any{"number": 1.5, "head": map[string]any{"sha": "abc", "ref": "feat"}}})
 		assert.False(t, ok) // non-whole number
 		pr, ok = parsePullRequestContext(map[string]any{"pull_request": map[string]any{"number": 1, "head": map[string]any{"sha": "abc", "ref": "feat"}, "base": map[string]any{"ref": "main"}}})
-		require.True(t, ok); assert.Equal(t, 1, pr.Number); assert.Equal(t, "main", *pr.BaseBranch)
+		require.True(t, ok)
+		assert.Equal(t, 1, pr.Number)
+		assert.Equal(t, "main", *pr.BaseBranch)
 	})
 
 	t.Run("parsePushContext: all shapes", func(t *testing.T) {
-		assert.Nil(t, parsePushContext(map[string]any{}))              // no after, no ref
-		assert.Nil(t, parsePushContext(map[string]any{"after": "abc"})) // no branch
-		assert.Nil(t, parsePushContext(map[string]any{"after": "abc", "ref": "main"})) // no prefix
+		assert.Nil(t, parsePushContext(map[string]any{}))                                     // no after, no ref
+		assert.Nil(t, parsePushContext(map[string]any{"after": "abc"}))                       // no branch
+		assert.Nil(t, parsePushContext(map[string]any{"after": "abc", "ref": "main"}))        // no prefix
 		assert.Nil(t, parsePushContext(map[string]any{"after": "abc", "ref": "refs/heads/"})) // empty branch
 		push := parsePushContext(map[string]any{"after": "abc", "ref": "refs/heads/dev"})
-		require.NotNil(t, push); assert.Equal(t, "dev", push.Branch); assert.Equal(t, "abc", push.After)
+		require.NotNil(t, push)
+		assert.Equal(t, "dev", push.Branch)
+		assert.Equal(t, "abc", push.After)
 	})
 
 	t.Run("parseCheckRunContext: all shapes", func(t *testing.T) {
 		cr, ok := parseCheckRunContext(map[string]any{})
-		assert.False(t, ok); assert.Nil(t, cr)
+		assert.False(t, ok)
+		assert.Nil(t, cr)
 		cr, ok = parseCheckRunContext(map[string]any{"check_run": map[string]any{"id": float64(99)}})
-		require.True(t, ok); assert.Equal(t, int64(99), cr.ID)
+		require.True(t, ok)
+		assert.Equal(t, int64(99), cr.ID)
 		cr, ok = parseCheckRunContext(map[string]any{"check_run": map[string]any{"id": "55"}})
-		require.True(t, ok); assert.Equal(t, int64(55), cr.ID)
+		require.True(t, ok)
+		assert.Equal(t, int64(55), cr.ID)
 		cr, ok = parseCheckRunContext(map[string]any{"check_run": map[string]any{"id": "notanum"}})
-		require.True(t, ok); assert.Equal(t, int64(0), cr.ID)
+		require.True(t, ok)
+		assert.Equal(t, int64(0), cr.ID)
 		cr, ok = parseCheckRunContext(map[string]any{"check_run": map[string]any{"id": true}})
-		require.True(t, ok); assert.Equal(t, int64(0), cr.ID)
+		require.True(t, ok)
+		assert.Equal(t, int64(0), cr.ID)
 		cr, ok = parseCheckRunContext(map[string]any{"check_run": map[string]any{"id": 1, "pull_requests": []any{map[string]any{}}}})
-		require.True(t, ok); assert.Nil(t, cr.PR)
+		require.True(t, ok)
+		assert.Nil(t, cr.PR)
 		payload := map[string]any{
-			"check_run": map[string]any{"id": 1, "pull_requests": []any{map[string]any{"number": 3, "head": map[string]any{"sha": "shax"}}}},
+			"check_run":        map[string]any{"id": 1, "pull_requests": []any{map[string]any{"number": 3, "head": map[string]any{"sha": "shax"}}}},
 			"requested_action": map[string]any{"identifier": "docsync/generate-patch"},
 		}
 		cr, ok = parseCheckRunContext(payload)
@@ -116,9 +136,13 @@ func TestCOV_GITHUBAPP_InternalHelpers(t *testing.T) {
 	})
 
 	t.Run("parseWebhookBody: null and invalid", func(t *testing.T) {
-		_, err := parseWebhookBody("null"); assert.Error(t, err)
-		_, err = parseWebhookBody("not json"); assert.Error(t, err)
-		parsed, err := parseWebhookBody(`{"a":1}`); require.NoError(t, err); assert.Equal(t, float64(1), parsed["a"])
+		_, err := parseWebhookBody("null")
+		assert.Error(t, err)
+		_, err = parseWebhookBody("not json")
+		assert.Error(t, err)
+		parsed, err := parseWebhookBody(`{"a":1}`)
+		require.NoError(t, err)
+		assert.Equal(t, float64(1), parsed["a"])
 	})
 
 	t.Run("VerifyWebhookSignature: length-mismatch hex -> false", func(t *testing.T) {

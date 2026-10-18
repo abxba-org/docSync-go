@@ -179,7 +179,7 @@ type AuditFinding struct {
 // the platform clock / CSPRNG (the TS default path).
 type IngestAuditFindingsOptions struct {
 	NowMs     *int64
-	RandBytes func(n int) []byte
+	RandBytes func(n int) ([]byte, error)
 }
 
 // defaultULIDs is the package-level default generator (the ONLY clock reader,
@@ -204,14 +204,14 @@ func IngestAuditFindings(findings []AuditFinding, opts *IngestAuditFindingsOptio
 		}
 		randBytes := opts.RandBytes
 		if randBytes == nil {
-			randBytes = func(n int) []byte {
+			randBytes = func(n int) ([]byte, error) {
 				buf := make([]byte, n)
 				if _, err := rand.Read(buf); err != nil {
 					// Unreachable in practice (crypto/rand on Linux); the
 					// generator refuses the row rather than inventing bytes.
-					return nil
+					return nil, err
 				}
-				return buf
+				return buf, nil
 			}
 		}
 		generator = docutil.NewULIDGeneratorWith(nowMs, randBytes)

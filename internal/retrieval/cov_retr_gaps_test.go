@@ -48,7 +48,7 @@ func TestRetrCov_apiExpressionsFor(t *testing.T) {
 func TestRetrCov_mappingFor(t *testing.T) {
 	g := graph.BuildDocumentGraph(graph.BuildDocumentGraphInput{
 		Manifest: schemas.Manifest{
-			Version: 1,
+			Version:   1,
 			Documents: []schemas.ManifestEntry{{Path: "docs/a.md", Sources: []string{"src/a/**"}}},
 		},
 	})

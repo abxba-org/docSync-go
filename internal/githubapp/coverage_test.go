@@ -4,7 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-		"net/http/httptest"
+	"net/http/httptest"
 	"strings"
 	"testing"
 
@@ -34,7 +34,7 @@ func TestCOV_GITHUBAPP_Routes(t *testing.T) {
 		})
 		body := mustJSON(t, map[string]any{
 			"action": "opened", "sender": map[string]any{"login": "human"},
-			"repository": map[string]any{"full_name": "acme/w"},
+			"repository":   map[string]any{"full_name": "acme/w"},
 			"installation": map[string]any{"id": 1},
 			"pull_request": map[string]any{
 				"number": 1, "head": map[string]any{"sha": "abc", "ref": "feat"},
@@ -98,7 +98,7 @@ func TestCOV_GITHUBAPP_Routes(t *testing.T) {
 		})
 		body := mustJSON(t, map[string]any{
 			"action": "opened", "sender": map[string]any{"login": "human"},
-			"repository": map[string]any{"full_name": "acme/w"},
+			"repository":   map[string]any{"full_name": "acme/w"},
 			"installation": map[string]any{"id": 1},
 			"pull_request": map[string]any{
 				"number": 1, "head": map[string]any{"sha": "abc", "ref": "feat"},
@@ -120,7 +120,7 @@ func TestCOV_GITHUBAPP_Routes(t *testing.T) {
 		})
 		body := mustJSON(t, map[string]any{
 			"action": "opened", "sender": map[string]any{"login": "human"},
-			"repository": map[string]any{"full_name": appTestRepoID},
+			"repository":   map[string]any{"full_name": appTestRepoID},
 			"installation": map[string]any{"id": 42},
 			"pull_request": map[string]any{
 				"number": 7, "head": map[string]any{"sha": "head456", "ref": "feature/docs"},
@@ -168,7 +168,7 @@ func TestCOV_GITHUBAPP_AppWiring(t *testing.T) {
 		})
 		body := mustJSON(t, map[string]any{
 			"action": "opened", "sender": map[string]any{"login": "human"},
-			"repository": map[string]any{"full_name": appTestRepoID},
+			"repository":   map[string]any{"full_name": appTestRepoID},
 			"installation": map[string]any{"id": 42},
 			"pull_request": map[string]any{
 				"number": 7, "head": map[string]any{"sha": "head456", "ref": "feature/docs"},
@@ -216,9 +216,9 @@ func TestCOV_GITHUBAPP_AppWiring(t *testing.T) {
 		logs := &[]string{}
 		app := githubapp.CreateAppWebhookHandler(githubapp.AppWebhookHandlerDeps{
 			AppCheckRuntime: &stubCheckRuntime{}, AppIdentity: appWebhookIdentity, Secret: appWebhookSecret,
-			Logger: loggedApp(t, logs),
-			Escalation:      &githubapp.AppEscalation{RunPatch: runPatch},
-			Clock:           func() string { return appWebhookClockTime },
+			Logger:     loggedApp(t, logs),
+			Escalation: &githubapp.AppEscalation{RunPatch: runPatch},
+			Clock:      func() string { return appWebhookClockTime },
 		})
 		body := mustJSON(t, map[string]any{
 			"action": "requested_action", "sender": map[string]any{"login": "maintainer"},
@@ -249,9 +249,9 @@ func TestCOV_GITHUBAPP_AppWiring(t *testing.T) {
 		logs := &[]string{}
 		app := githubapp.CreateAppWebhookHandler(githubapp.AppWebhookHandlerDeps{
 			AppCheckRuntime: &stubCheckRuntime{}, AppIdentity: appWebhookIdentity, Secret: appWebhookSecret,
-			Logger: loggedApp(t, logs),
-			Escalation:      &githubapp.AppEscalation{RunPatch: runPatch},
-			Clock:           func() string { return appWebhookClockTime },
+			Logger:     loggedApp(t, logs),
+			Escalation: &githubapp.AppEscalation{RunPatch: runPatch},
+			Clock:      func() string { return appWebhookClockTime },
 		})
 		body := mustJSON(t, map[string]any{
 			"action": "requested_action", "sender": map[string]any{"login": "maintainer"},
@@ -441,7 +441,7 @@ func TestCOV_GITHUBAPP_ReceiverEdges(t *testing.T) {
 		receiver := makeReceiver(recvSecret, calls, &[]string{}, nil)
 		body := mustJSON(t, map[string]any{
 			"action": "opened", "sender": map[string]any{"login": "human"},
-			"repository": map[string]any{"full_name": "acme/w"},
+			"repository":   map[string]any{"full_name": "acme/w"},
 			"installation": "not-an-object",
 			"pull_request": map[string]any{
 				"number": 1, "head": map[string]any{"sha": "abc", "ref": "feat"},
@@ -460,7 +460,7 @@ func TestCOV_GITHUBAPP_ReceiverEdges(t *testing.T) {
 		receiver := makeReceiver(recvSecret, calls, &[]string{}, nil)
 		body := mustJSON(t, map[string]any{
 			"action": "opened", "sender": map[string]any{"login": "human"},
-			"repository": map[string]any{"full_name": "acme/w"},
+			"repository":   map[string]any{"full_name": "acme/w"},
 			"installation": map[string]any{"id": 42},
 			"pull_request": map[string]any{"number": 1},
 		})
@@ -478,7 +478,7 @@ func TestCOV_GITHUBAPP_ReceiverEdges(t *testing.T) {
 		receiver := makeReceiver(recvSecret, calls, &[]string{}, nil)
 		body := mustJSON(t, map[string]any{
 			"action": "opened", "sender": map[string]any{"login": "human"},
-			"repository": map[string]any{"full_name": "acme/w"},
+			"repository":   map[string]any{"full_name": "acme/w"},
 			"installation": map[string]any{"id": 42},
 			"pull_request": map[string]any{
 				"number": 1.5, "head": map[string]any{"sha": "abc", "ref": "feat"},
@@ -514,10 +514,10 @@ func TestCOV_GITHUBAPP_ReceiverEdges(t *testing.T) {
 		receiver := makeReceiver(recvSecret, calls, &[]string{}, nil)
 		body := mustJSON(t, map[string]any{
 			"action": "requested_action", "sender": map[string]any{"login": "maintainer"},
-			"repository": map[string]any{"full_name": "acme/w"},
+			"repository":   map[string]any{"full_name": "acme/w"},
 			"installation": map[string]any{"id": 42},
 			"check_run": map[string]any{
-				"id": 99,
+				"id":            99,
 				"pull_requests": []any{map[string]any{"number": 3, "head": map[string]any{"sha": "shax"}}},
 			},
 			"requested_action": map[string]any{"identifier": "docsync/generate-patch"},
@@ -589,7 +589,7 @@ func TestCOV_GITHUBAPP_ReceiverBranches(t *testing.T) {
 	t.Run("body over 1MiB is truncated before signature check", func(t *testing.T) {
 		payload := map[string]any{
 			"action": "opened", "sender": map[string]any{"login": "human"},
-			"repository": map[string]any{"full_name": "acme/w"},
+			"repository":   map[string]any{"full_name": "acme/w"},
 			"installation": map[string]any{"id": 42},
 			"pull_request": map[string]any{
 				"number": 1, "head": map[string]any{"sha": "abc", "ref": "feat"},
@@ -685,9 +685,9 @@ func TestCOV_GITHUBAPP_ErrorsAsDuplicateUnwrapNil(t *testing.T) {
 	logs := &[]string{}
 	app := githubapp.CreateAppWebhookHandler(githubapp.AppWebhookHandlerDeps{
 		AppCheckRuntime: &stubCheckRuntime{}, AppIdentity: appWebhookIdentity, Secret: appWebhookSecret,
-		Logger: loggedApp(t, logs),
-		Escalation:      &githubapp.AppEscalation{RunPatch: runPatch},
-		Clock:           func() string { return appWebhookClockTime },
+		Logger:     loggedApp(t, logs),
+		Escalation: &githubapp.AppEscalation{RunPatch: runPatch},
+		Clock:      func() string { return appWebhookClockTime },
 	})
 	body := mustJSON(t, map[string]any{
 		"action": "requested_action", "sender": map[string]any{"login": "maintainer"},
@@ -770,7 +770,7 @@ func TestCOV_GITHUBAPP_HandlerErrorLanes(t *testing.T) {
 		_, err := handler.HandlePullRequest(githubapp.PullRequestCheckInput{
 			Repo: "acme/widgets", Base: "main", Head: "headsha", PR: githubapp.RunCheckPortPR{Number: 7},
 		})
-		assert.NoError(t, err) // early-signal errors are discarded by the injected port
+		assert.NoError(t, err)        // early-signal errors are discarded by the injected port
 		assert.Equal(t, 2, svc.calls) // early-signal attempt + final upsert attempted
 	})
 }
@@ -836,9 +836,9 @@ func TestCOV_GITHUBAPP_ReceiverNilHandlers(t *testing.T) {
 
 func TestCOV_GITHUBAPP_InstallationIDShapes(t *testing.T) {
 	cases := []struct {
-		name  string
-		id    any
-		want  any
+		name string
+		id   any
+		want any
 	}{
 		{"float64 non-whole", 42.5, float64(42.5)},
 		{"string empty", "", nil},
@@ -851,7 +851,7 @@ func TestCOV_GITHUBAPP_InstallationIDShapes(t *testing.T) {
 			receiver := makeReceiver(recvSecret, calls, &[]string{}, nil)
 			body := mustJSON(t, map[string]any{
 				"action": "opened", "sender": map[string]any{"login": "human"},
-				"repository": map[string]any{"full_name": "acme/w"},
+				"repository":   map[string]any{"full_name": "acme/w"},
 				"installation": map[string]any{"id": c.id},
 				"pull_request": map[string]any{
 					"number": 1, "head": map[string]any{"sha": "abc", "ref": "feat"},
@@ -875,9 +875,9 @@ func TestCOV_GITHUBAPP_ParseEdges(t *testing.T) {
 		receiver := makeReceiver(recvSecret, calls, &[]string{}, nil)
 		body := mustJSON(t, map[string]any{
 			"action": "requested_action", "sender": map[string]any{"login": "maintainer"},
-			"repository": map[string]any{"full_name": "acme/w"},
-			"installation": map[string]any{"id": 42},
-			"check_run": map[string]any{"id": "notanum"},
+			"repository":       map[string]any{"full_name": "acme/w"},
+			"installation":     map[string]any{"id": 42},
+			"check_run":        map[string]any{"id": "notanum"},
 			"requested_action": map[string]any{"identifier": "docsync/generate-patch"},
 		})
 		result, err := receiver.HandleWebhook(body, githubapp.WebhookHeaders{
@@ -895,7 +895,7 @@ func TestCOV_GITHUBAPP_ParseEdges(t *testing.T) {
 		receiver := makeReceiver(recvSecret, calls, &[]string{}, nil)
 		body := mustJSON(t, map[string]any{
 			"action": "opened", "sender": map[string]any{"login": "human"},
-			"repository": map[string]any{"full_name": "acme/w"},
+			"repository":   map[string]any{"full_name": "acme/w"},
 			"installation": map[string]any{"id": 42},
 			"pull_request": map[string]any{
 				"number": "seven", "head": map[string]any{"sha": "abc", "ref": "feat"},
@@ -918,8 +918,8 @@ func TestCOV_GITHUBAPP_FinalGaps(t *testing.T) {
 		receiver := makeReceiver(recvSecret, calls, logs, nil)
 		body := mustJSON(t, map[string]any{
 			"action": "requested_action", "sender": map[string]any{"login": "maintainer"},
-			"repository": map[string]any{"full_name": "acme/w"},
-			"installation": map[string]any{"id": 42},
+			"repository":       map[string]any{"full_name": "acme/w"},
+			"installation":     map[string]any{"id": 42},
 			"requested_action": map[string]any{"identifier": "docsync/generate-patch"},
 		})
 		result, err := receiver.HandleWebhook(body, githubapp.WebhookHeaders{

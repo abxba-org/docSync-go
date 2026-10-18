@@ -123,7 +123,6 @@ func TestCOV_STATE_CasWriteExpectedWhenAbsent(t *testing.T) {
 	require.Error(t, err)
 }
 
-
 func TestCOV_STATE_UpsertAndAppendBadIdentifiers(t *testing.T) {
 	store, _ := newStore(t, nil)
 

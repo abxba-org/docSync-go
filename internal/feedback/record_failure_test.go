@@ -37,11 +37,11 @@ func TestRecord_EventIDGenerateFailure(t *testing.T) {
 	require.NoError(t, err)
 
 	input := FeedbackEventInput{
-		EventID:        nil,
-		DecisionID:     "d1",
-		PolicyVersion:  1,
-		Signal:         schemas.FeedbackEventSignalReject,
-		RejectReason:   func() *string { s := "doc already correct"; return &s }(),
+		EventID:       nil,
+		DecisionID:    "d1",
+		PolicyVersion: 1,
+		Signal:        schemas.FeedbackEventSignalReject,
+		RejectReason:  func() *string { s := "doc already correct"; return &s }(),
 	}
 
 	_, err = recorder.Record(input)
@@ -65,12 +65,12 @@ func TestRecord_HappyPath(t *testing.T) {
 	require.NoError(t, err)
 
 	input := FeedbackEventInput{
-		EventID:        nil,
-		DecisionID:     "d1",
-		PolicyVersion:  1,
-		Signal:         schemas.FeedbackEventSignalReject,
-		RejectReason:   func() *string { s := "doc already correct"; return &s }(),
-		At:             func() *string { s := "2026-10-08T12:00:00Z"; return &s }(),
+		EventID:       nil,
+		DecisionID:    "d1",
+		PolicyVersion: 1,
+		Signal:        schemas.FeedbackEventSignalReject,
+		RejectReason:  func() *string { s := "doc already correct"; return &s }(),
+		At:            func() *string { s := "2026-10-08T12:00:00Z"; return &s }(),
 	}
 
 	_, err = recorder.Record(input)

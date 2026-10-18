@@ -343,7 +343,7 @@ func TestCOV_GITX_ResolveRevNonShaFailsClosed(t *testing.T) {
 func TestCOV_GITX_CatFileBlobShaNonShaFailsClosed(t *testing.T) {
 	sha := strings.Repeat("a", 40)
 	client, _ := clientWithScript([]gitx.GitRunResult{
-		capturedResult(&gitx.GitRunResult{ExitCode: intPtr(0), Stdout: []byte(sha)}), // ^{commit}
+		capturedResult(&gitx.GitRunResult{ExitCode: intPtr(0), Stdout: []byte(sha)}),    // ^{commit}
 		capturedResult(&gitx.GitRunResult{ExitCode: intPtr(0), Stdout: []byte("nope")}), // sha:path
 	})
 	_, err := client.CatFile(t.Context(), sha, "a.txt")

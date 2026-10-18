@@ -349,7 +349,6 @@ func TestCOV2_STATE_WriteRawForTest_NilQueuePath(t *testing.T) {
 	require.False(t, result2.OK)
 }
 
-
 /* ------------------------------------------------------------- ReadMergeLedger empty key */
 
 func TestCOV2_STATE_ReadMergeLedger_EmptyKey(t *testing.T) {

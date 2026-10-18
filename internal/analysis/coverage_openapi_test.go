@@ -27,37 +27,37 @@ func opMap(inner map[string]any) map[string]any {
 
 func TestCOV_ANALYSIS_OpenAPI_AllDeltaKinds(t *testing.T) {
 	cases := []struct {
-		name  string
+		name   string
 		before map[string]any
 		after  map[string]any
 		kinds  []analysis.OpenApiDeltaKind
 	}{
 		{
-			name:  "path_removed",
+			name:   "path_removed",
 			before: oapiDoc(map[string]any{"/p": opMap(map[string]any{"responses": resp("ok")})}),
 			after:  oapiDoc(map[string]any{}),
 			kinds:  []analysis.OpenApiDeltaKind{analysis.OpenApiDeltaPathRemoved},
 		},
 		{
-			name:  "path_added",
+			name:   "path_added",
 			before: oapiDoc(map[string]any{}),
 			after:  oapiDoc(map[string]any{"/p": opMap(map[string]any{"responses": resp("ok")})}),
 			kinds:  []analysis.OpenApiDeltaKind{analysis.OpenApiDeltaPathAdded},
 		},
 		{
-			name:  "operation_removed",
+			name:   "operation_removed",
 			before: oapiDoc(map[string]any{"/p": map[string]any{"get": map[string]any{"responses": resp("ok")}}}),
 			after:  oapiDoc(map[string]any{"/p": map[string]any{}}),
 			kinds:  []analysis.OpenApiDeltaKind{analysis.OpenApiDeltaOperationRemoved},
 		},
 		{
-			name:  "operation_added",
+			name:   "operation_added",
 			before: oapiDoc(map[string]any{"/p": map[string]any{}}),
 			after:  oapiDoc(map[string]any{"/p": map[string]any{"get": map[string]any{"responses": resp("ok")}}}),
 			kinds:  []analysis.OpenApiDeltaKind{analysis.OpenApiDeltaOperationAdded},
 		},
 		{
-			name:  "parameter_removed",
+			name: "parameter_removed",
 			before: oapiDoc(map[string]any{"/p": opMap(map[string]any{
 				"parameters": []any{param("q", "query", map[string]any{"type": "string"})},
 				"responses":  resp("ok"),
@@ -68,7 +68,7 @@ func TestCOV_ANALYSIS_OpenAPI_AllDeltaKinds(t *testing.T) {
 			kinds: []analysis.OpenApiDeltaKind{analysis.OpenApiDeltaParameterRemoved},
 		},
 		{
-			name:  "parameter_added",
+			name:   "parameter_added",
 			before: oapiDoc(map[string]any{"/p": opMap(map[string]any{"responses": resp("ok")})}),
 			after: oapiDoc(map[string]any{"/p": opMap(map[string]any{
 				"parameters": []any{param("q", "query", map[string]any{"type": "string"})},
@@ -77,7 +77,7 @@ func TestCOV_ANALYSIS_OpenAPI_AllDeltaKinds(t *testing.T) {
 			kinds: []analysis.OpenApiDeltaKind{analysis.OpenApiDeltaParameterAdded},
 		},
 		{
-			name:  "deprecated_added",
+			name: "deprecated_added",
 			before: oapiDoc(map[string]any{"/p": opMap(map[string]any{
 				"responses": resp("ok"),
 			})}),
@@ -88,7 +88,7 @@ func TestCOV_ANALYSIS_OpenAPI_AllDeltaKinds(t *testing.T) {
 			kinds: []analysis.OpenApiDeltaKind{analysis.OpenApiDeltaDeprecatedAdded},
 		},
 		{
-			name:  "operation_id_changed",
+			name: "operation_id_changed",
 			before: oapiDoc(map[string]any{"/p": opMap(map[string]any{
 				"operationId": "old",
 				"responses":   resp("ok"),
@@ -100,7 +100,7 @@ func TestCOV_ANALYSIS_OpenAPI_AllDeltaKinds(t *testing.T) {
 			kinds: []analysis.OpenApiDeltaKind{analysis.OpenApiDeltaOperationIDChanged},
 		},
 		{
-			name:  "schema_property_added",
+			name: "schema_property_added",
 			before: compDoc(map[string]any{"A": map[string]any{
 				"type":       "object",
 				"properties": map[string]any{},
@@ -112,7 +112,7 @@ func TestCOV_ANALYSIS_OpenAPI_AllDeltaKinds(t *testing.T) {
 			kinds: []analysis.OpenApiDeltaKind{analysis.OpenApiDeltaSchemaPropertyAdded},
 		},
 		{
-			name:  "schema_property_removed",
+			name: "schema_property_removed",
 			before: compDoc(map[string]any{"A": map[string]any{
 				"type":       "object",
 				"properties": map[string]any{"name": map[string]any{"type": "string"}},
@@ -124,19 +124,19 @@ func TestCOV_ANALYSIS_OpenAPI_AllDeltaKinds(t *testing.T) {
 			kinds: []analysis.OpenApiDeltaKind{analysis.OpenApiDeltaSchemaPropertyRemoved},
 		},
 		{
-			name:  "enum_narrowed",
+			name:   "enum_narrowed",
 			before: schemaDocWithEnum(map[string]bool{"a": true, "b": true, "c": true}),
 			after:  schemaDocWithEnum(map[string]bool{"a": true, "b": true}),
 			kinds:  []analysis.OpenApiDeltaKind{analysis.OpenApiDeltaEnumNarrowed},
 		},
 		{
-			name:  "enum_widened",
+			name:   "enum_widened",
 			before: schemaDocWithEnum(map[string]bool{"a": true, "b": true}),
 			after:  schemaDocWithEnum(map[string]bool{"a": true, "b": true, "c": true}),
 			kinds:  []analysis.OpenApiDeltaKind{analysis.OpenApiDeltaEnumWidened},
 		},
 		{
-			name:  "description_changed",
+			name: "description_changed",
 			before: oapiDoc(map[string]any{"/p": opMap(map[string]any{
 				"responses": resp("old"),
 			})}),
@@ -184,8 +184,8 @@ func schemaDocWithEnum(vals map[string]bool) map[string]any {
 			"description": "ok",
 			"content": map[string]any{
 				"application/json": map[string]any{"schema": map[string]any{
-					"type":   "string",
-					"enum":   enum,
+					"type": "string",
+					"enum": enum,
 				}},
 			},
 		}},

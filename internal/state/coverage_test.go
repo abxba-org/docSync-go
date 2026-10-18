@@ -269,4 +269,3 @@ func TestCOV_STATE_Store_ReadDocStateAndAppendMissing(t *testing.T) {
 	require.NoError(t, err)
 	require.False(t, read.Exists)
 }
-

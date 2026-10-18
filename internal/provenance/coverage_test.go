@@ -10,8 +10,8 @@ import (
 	"math"
 	"os"
 	"path/filepath"
-	"strings"
 	"strconv"
+	"strings"
 	"sync"
 	"testing"
 
@@ -305,7 +305,7 @@ func TestCOV_PROVENANCE_SecretScanMultipleAndEncoded(t *testing.T) {
 func TestCOV_PROVENANCE_AssertNoSecretsGate(t *testing.T) {
 	require.NoError(t, provenance.AssertNoSecrets(*buildRecord(t, nil)))
 
-	dirty := recordWithSecret(t, "sk-" + strings.Repeat("k", 20))
+	dirty := recordWithSecret(t, "sk-"+strings.Repeat("k", 20))
 	err := provenance.AssertNoSecrets(*dirty)
 	require.Error(t, err)
 	var secretErr *provenance.ProvenanceSecretError

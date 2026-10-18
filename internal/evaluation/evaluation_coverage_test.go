@@ -87,7 +87,7 @@ func covDecisionRecord(decisionID string, policyVersion int, docPath string) map
 func covDetBuilder() *evaluation.DatasetBuilder {
 	builder, err := evaluation.NewDatasetBuilder(evaluation.DatasetBuilderOptions{
 		Clock:     func() int64 { return 1_700_000_000_000 },
-		RandBytes: func(n int) []byte { return make([]byte, n) },
+		RandBytes: func(n int) ([]byte, error) { return make([]byte, n), nil },
 	})
 	if err != nil {
 		panic(err)
@@ -145,13 +145,13 @@ func TestCOV_EVAL_BuildLabeledCasesConcurrencyGroupSuffixDigits(t *testing.T) {
 	result, err := builder.BuildLabeledCases(evaluation.BuildLabeledCasesInput{
 		RunRecords: []map[string]any{
 			{
-				"repo":                covRepo,
-				"base_sha":            covSha(1),
-				"head_sha":            covSha(2),
-				"manifest_version":    "1",
-				"policy_version":      17,
-				"docs_affected":       false,
-				"concurrency_group":   "docsync-acme-42",
+				"repo":              covRepo,
+				"base_sha":          covSha(1),
+				"head_sha":          covSha(2),
+				"manifest_version":  "1",
+				"policy_version":    17,
+				"docs_affected":     false,
+				"concurrency_group": "docsync-acme-42",
 			},
 		},
 	})
@@ -162,13 +162,13 @@ func TestCOV_EVAL_BuildLabeledCasesConcurrencyGroupSuffixDigits(t *testing.T) {
 	result, err = builder.BuildLabeledCases(evaluation.BuildLabeledCasesInput{
 		RunRecords: []map[string]any{
 			{
-				"repo":                covRepo,
-				"base_sha":            covSha(1),
-				"head_sha":            covSha(2),
-				"manifest_version":    "1",
-				"policy_version":      17,
-				"docs_affected":       false,
-				"concurrency_group":   "docsync-acme-abc",
+				"repo":              covRepo,
+				"base_sha":          covSha(1),
+				"head_sha":          covSha(2),
+				"manifest_version":  "1",
+				"policy_version":    17,
+				"docs_affected":     false,
+				"concurrency_group": "docsync-acme-abc",
 			},
 		},
 	})
@@ -294,7 +294,7 @@ func TestCOV_EVAL_YieldReportAllTrueNegatives(t *testing.T) {
 				"decision_id":      "d_tn",
 			},
 		},
-		Labels:       []schemas.HygieneLabel{covLabel(0, "d_labeled", 17)},
+		Labels:        []schemas.HygieneLabel{covLabel(0, "d_labeled", 17)},
 		LaterDocEdits: []evaluation.LaterDocEdit{{PRKey: "7", DocPath: "docs/a.md", At: covAt}},
 	})
 	require.NoError(t, err)
@@ -466,12 +466,12 @@ func TestCOV_EVAL_IngestAuditFindingsAllVerdicts(t *testing.T) {
 
 func covInt64() *int64 { v := int64(1_700_000_000_000); return &v }
 
-func covConstRng(n int) []byte {
+func covConstRng(n int) ([]byte, error) {
 	out := make([]byte, n)
 	for i := range out {
 		out[i] = 7
 	}
-	return out
+	return out, nil
 }
 
 func TestCOV_EVAL_ComputeMetricsNoUpdatesShareZero(t *testing.T) {
@@ -681,15 +681,15 @@ func TestCOV_EVAL_ComputeObjectiveScoreMetricValidation(t *testing.T) {
 func TestCOV_EVAL_CostAttributionProviderNonNil(t *testing.T) {
 	runs := []evaluation.SteadyStateRunInput{
 		{
-			RunID:                "run_p",
-			Repo:                 covRepo,
-			PolicyVersion:        17,
-			Decisions:            10,
-			Abstains:             1,
-			Overrides:            1,
-			AutoApplied:          1,
-			SpotCheckSampled:     1,
-			SpotCheckChecked:     1,
+			RunID:            "run_p",
+			Repo:             covRepo,
+			PolicyVersion:    17,
+			Decisions:        10,
+			Abstains:         1,
+			Overrides:        1,
+			AutoApplied:      1,
+			SpotCheckSampled: 1,
+			SpotCheckChecked: 1,
 			Usages: []evaluation.CostAttributionUsage{
 				{Role: "writer", Model: "m", Provider: covStrPtr("anthropic"), PromptTokens: 10, CompletionTokens: 5, CostUsd: covF64(0.01)},
 			},
@@ -703,11 +703,11 @@ func TestCOV_EVAL_CostAttributionProviderNonNil(t *testing.T) {
 
 	badRuns := []evaluation.SteadyStateRunInput{
 		{
-			RunID:      "run_bad",
-			Repo:       covRepo,
+			RunID:         "run_bad",
+			Repo:          covRepo,
 			PolicyVersion: 17,
-			Decisions:  10,
-			Usages:     []evaluation.CostAttributionUsage{{Role: "writer", Model: "m", Provider: covStrPtr("")}},
+			Decisions:     10,
+			Usages:        []evaluation.CostAttributionUsage{{Role: "writer", Model: "m", Provider: covStrPtr("")}},
 		},
 	}
 	_, err = evaluation.CostAttributionByPolicyVersion(evaluation.CostAttributionRunsFrom(badRuns))
@@ -723,14 +723,14 @@ func TestCOV_EVAL_SteadyStateSummaryBandNaN(t *testing.T) {
 	})
 
 	_, err := evaluation.BuildSteadyStateSummary(evaluation.SteadyStateSummaryInput{
-		Rows: []*evaluation.SteadyStateRow{row},
+		Rows:              []*evaluation.SteadyStateRow{row},
 		AbstainHealthBand: &evaluation.AbstainHealthBand{MinAbstainRate: covF64(math.NaN())},
 	})
 	require.Error(t, err)
 	assert.Contains(t, err.Error(), "minAbstainRate")
 
 	_, err = evaluation.BuildSteadyStateSummary(evaluation.SteadyStateSummaryInput{
-		Rows: []*evaluation.SteadyStateRow{row},
+		Rows:              []*evaluation.SteadyStateRow{row},
 		AbstainHealthBand: &evaluation.AbstainHealthBand{MaxAbstainRate: covF64(math.Inf(1))},
 	})
 	require.Error(t, err)

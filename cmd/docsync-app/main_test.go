@@ -66,7 +66,8 @@ func TestServeGracefulClose(t *testing.T) {
 // TestOSExitSeam documents why main() is not exercised in-process.
 //
 // main() is a single line:
-//   func main() { osExit(run()) }
+//
+//	func main() { osExit(run()) }
 //
 // run() blocks on serve() (srv.ListenAndServe), so invoking main() or run()
 // from a test would hang the test binary until the process dies. Overriding

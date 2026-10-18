@@ -9,14 +9,13 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/DUDE616/docSync-go/internal/docutil"
 	"github.com/DUDE616/docSync-go/internal/graph"
 	"github.com/DUDE616/docSync-go/internal/schemas"
 	"github.com/DUDE616/docSync-go/internal/state"
-	"github.com/DUDE616/docSync-go/internal/docutil"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
-
 
 // plantRaw overwrites a state file's raw bytes through the fake's test-only
 // hook, conditioning the CAS on the bytes currently stored.
@@ -32,7 +31,6 @@ func plantRaw(t *testing.T, fake *InMemoryStateStore, relPath, content string) s
 	require.True(t, write.OK, "the raw plant must land")
 	return content
 }
-
 
 func TestCOV_TESTKIT_Internal_jsNumber(t *testing.T) {
 	assert.Equal(t, "0", jsNumber(0))
@@ -968,8 +966,6 @@ func TestCOV_TESTKIT_Internal_DocPathArbAlreadyHasMd(t *testing.T) {
 	assert.True(t, strings.HasSuffix(path, ".md"), "doc paths must end in .md: %s", path)
 }
 
-
-
 func TestCOV_TESTKIT_Internal_GoldenExistsIOError(t *testing.T) {
 	dir := t.TempDir()
 	file, err := GoldenPathFor(dir, "test")
@@ -1231,7 +1227,7 @@ func TestCOV_TESTKIT_Internal_UpsertRunRecordExistingParseError(t *testing.T) {
 	require.NoError(t, err)
 	// Plant corrupt bytes so the existing parse fails
 	plantRaw(t, s, relPath, "{corrupt:")
-	
+
 	_, err = s.UpsertRunRecord(key, example)
 	require.Error(t, err)
 }
@@ -1249,7 +1245,7 @@ func TestCOV_TESTKIT_Internal_UpsertRunRecordExistingTypeMismatch(t *testing.T) 
 	require.NoError(t, err)
 	// Plant valid JSON but not a RunRecord - the existing parse will succeed but parseRegisteredEntry will produce wrong type
 	plantRaw(t, s, relPath, `{"not": "run record"}`)
-	
+
 	_, err = s.UpsertRunRecord(key, example)
 	require.Error(t, err)
 }
@@ -1407,8 +1403,8 @@ func TestCOV_TESTKIT_Internal_AssertPaymentsAnchorsLine12Drifted(t *testing.T) {
 	for i := 0; i < 13; i++ {
 		lines[i] = "line " + strconv.Itoa(i+1)
 	}
-	lines[7] = "Refund requests require an `idempotencyKey`."  // line 8 correct
-	lines[11] = "wrong text"  // line 12 wrong
+	lines[7] = "Refund requests require an `idempotencyKey`." // line 8 correct
+	lines[11] = "wrong text"                                  // line 12 wrong
 	require.NoError(t, WriteRepoFile(root, PaymentsDoc, strings.Join(lines, "\n")+"\n"))
 	err := AssertPaymentsAnchors(root)
 	require.Error(t, err)
@@ -1480,8 +1476,6 @@ func TestCOV_TESTKIT_Internal_WriteMonorepoFixtureTreeSmall(t *testing.T) {
 	// Check manifest was written
 	assert.Contains(t, files, ".docsync/manifest.yml")
 }
-
-
 
 func TestCOV_TESTKIT_Internal_GoldenExpectWithNearMatch(t *testing.T) {
 	dir := t.TempDir()
@@ -1565,8 +1559,6 @@ func TestCOV_TESTKIT_Internal_RepoPathRejectsAbsolute(t *testing.T) {
 	require.Error(t, err)
 }
 
-
-
 func TestCOV_TESTKIT_Internal_PaymentsPipelineLifecycle(t *testing.T) {
 	root := t.TempDir()
 	p, err := BuildPaymentsPipeline(root)
@@ -1599,7 +1591,7 @@ func TestCOV_TESTKIT_Internal_WriteMonorepoLarge(t *testing.T) {
 	require.NoError(t, err)
 	files, err := ListRepoFiles(root)
 	require.NoError(t, err)
-	require.Len(t, files, 3*3*3 + 3 + 1)
+	require.Len(t, files, 3*3*3+3+1)
 }
 
 func TestCOV_TESTKIT_Internal_ReadRepoFileMissingFile(t *testing.T) {

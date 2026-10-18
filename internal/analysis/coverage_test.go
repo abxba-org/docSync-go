@@ -135,12 +135,12 @@ func TestCOV_ANALYSIS_OpenAPI_DescriptionAbsent(t *testing.T) {
 func TestCOV_ANALYSIS_OpenAPI_ComparePropertyTypeChanged(t *testing.T) {
 	before := covDocWith(map[string]any{"/p": map[string]any{"get": map[string]any{}}})
 	before["components"] = map[string]any{"schemas": map[string]any{"A": map[string]any{
-		"type": "object",
+		"type":       "object",
 		"properties": map[string]any{"name": map[string]any{"type": "string"}},
 	}}}
 	after := covDocWith(map[string]any{"/p": map[string]any{"get": map[string]any{}}})
 	after["components"] = map[string]any{"schemas": map[string]any{"A": map[string]any{
-		"type": "object",
+		"type":       "object",
 		"properties": map[string]any{"name": map[string]any{"type": "integer"}},
 	}}}
 	result := classify(t, before, after)
@@ -328,7 +328,7 @@ func TestCOV_ANALYSIS_Generated_ListFeedbackEventsReadError(t *testing.T) {
 
 func TestCOV_ANALYSIS_Generated_NewJSONLSinkViaRecorderRelativeStateDir(t *testing.T) {
 	facts := analysis.AnalyzerMispredictionInput{
-		DecisionID:   "d", PolicyVersion: 1,
+		DecisionID: "d", PolicyVersion: 1,
 		Predicted: "p", Actual: "a", Paths: []string{"x"},
 	}
 	_, err := analysis.RecordAnalyzerMisprediction(facts, analysis.FeedbackRecorderOptions{
@@ -376,7 +376,7 @@ func TestCOV_ANALYSIS_Generated_TruncateForMessageLongStateDir(t *testing.T) {
 func covFacts(t *testing.T) analysis.AnalyzerMispredictionInput {
 	t.Helper()
 	return analysis.AnalyzerMispredictionInput{
-		DecisionID:   "d", PolicyVersion: 1,
+		DecisionID: "d", PolicyVersion: 1,
 		Predicted: "p", Actual: "a", Paths: []string{"x"},
 		EventID: strPtr("01JP11T2300000000000000000"),
 	}

@@ -51,22 +51,22 @@ func sha(n int) string {
 // (labels only; no network).
 var byteSeed int
 
-func detRng(bytes int) []byte {
+func detRng(bytes int) ([]byte, error) {
 	out := make([]byte, bytes)
 	for index := 0; index < bytes; index++ {
 		out[index] = byte((byteSeed*37 + index*11) % 256)
 	}
 	byteSeed++
-	return out
+	return out, nil
 }
 
 // constRng fills every byte with 7 (deterministic ULID labels).
-func constRng(bytes int) []byte {
+func constRng(bytes int) ([]byte, error) {
 	out := make([]byte, bytes)
 	for i := range out {
 		out[i] = 7
 	}
-	return out
+	return out, nil
 }
 
 // labelFor builds a schema-valid hygiene label pinned to a decision id.

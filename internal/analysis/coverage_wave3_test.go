@@ -99,7 +99,7 @@ func TestCOV3_GENERATED_MarshalJSONLine_FeedbackEvent(t *testing.T) {
 	event, err := analysis.RecordFeedbackEvent(opts, analysis.FeedbackEventInput{
 		DecisionID: "d", PolicyVersion: 1, Signal: "reject",
 		RejectReason: strPtr("reason"),
-		At: strPtr("2026-01-01T00:00:00Z"),
+		At:           strPtr("2026-01-01T00:00:00Z"),
 	})
 	require.NoError(t, err)
 	require.NotNil(t, event)
@@ -129,7 +129,7 @@ func TestCOV3_GENERATED_RecordAnalyzerMisprediction_FullFlow(t *testing.T) {
 		At:            strPtr("2026-01-01T00:00:00Z"),
 	}, analysis.FeedbackRecorderOptions{
 		StateDir: dir,
-		Clock:   func() string { return "2026-01-01T00:00:00Z" },
+		Clock:    func() string { return "2026-01-01T00:00:00Z" },
 	})
 	require.NoError(t, err)
 	require.NotNil(t, event)
@@ -194,13 +194,13 @@ func TestCOV3_OPENAPI_ContentRemoved(t *testing.T) {
 	before := oapiDoc(map[string]any{"/p": opMap(map[string]any{
 		"responses": map[string]any{"200": map[string]any{
 			"description": "ok",
-			"content": map[string]any{"application/json": map[string]any{"schema": map[string]any{"type": "object"}}},
+			"content":     map[string]any{"application/json": map[string]any{"schema": map[string]any{"type": "object"}}},
 		}},
 	})})
 	after := oapiDoc(map[string]any{"/p": opMap(map[string]any{
 		"responses": map[string]any{"200": map[string]any{
 			"description": "ok",
-			"content": map[string]any{},
+			"content":     map[string]any{},
 		}},
 	})})
 	result, err := analysis.ClassifyOpenApiDelta(before, after)

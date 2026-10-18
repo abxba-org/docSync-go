@@ -636,8 +636,8 @@ func TestCOV_CLI_373_RunFixWithFlowDepsNoop(t *testing.T) {
 		Cwd: repo.root,
 		Env: map[string]string{"OPENROUTER_API_KEY": "sk-or-v1-test-run-key"},
 		FlowDeps: &cli.FixFlowDeps{
-			Store:   store,
-			Clock:   func() string { return "2026-01-01T00:00:00Z" },
+			Store: store,
+			Clock: func() string { return "2026-01-01T00:00:00Z" },
 		},
 	})
 	assert.Equal(t, cli.ExitOK, exit)
@@ -667,4 +667,3 @@ func TestCOV_CLI_375_RunAuditNonMappedTriggerDefaultsToEmpty(t *testing.T) {
 }
 
 /* ------------------------------------------------------------ fixGlyphSet */
-

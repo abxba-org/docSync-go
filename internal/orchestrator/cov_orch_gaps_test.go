@@ -91,9 +91,9 @@ func TestOrchCov_applyDocBase(t *testing.T) {
 	assert.True(t, doc.PartialCoverage)
 }
 
-func boolp(v bool) *bool { return &v }
-func intp(v int) *int { return &v }
-func modePtr(m schemas.DocMode) *schemas.DocMode { return &m }
+func boolp(v bool) *bool                                     { return &v }
+func intp(v int) *int                                        { return &v }
+func modePtr(m schemas.DocMode) *schemas.DocMode             { return &m }
 func ptr(t schemas.PipelineOutcome) *schemas.PipelineOutcome { return &t }
 
 type emptyError struct{}
@@ -103,4 +103,4 @@ func (e *emptyError) Error() string { return "" }
 type codedError struct{ code string }
 
 func (e *codedError) Error() string { return "coded" }
-func (e *codedError) Code() string { return e.code }
+func (e *codedError) Code() string  { return e.code }

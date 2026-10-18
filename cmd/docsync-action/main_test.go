@@ -17,16 +17,16 @@ import (
 func cleanCanonicalReport() *schemas.CanonicalReport {
 	generatedAt := "2026-10-07T00:00:00Z"
 	return &schemas.CanonicalReport{
-		RunID:          "run_action_coverage",
-		Key:            schemas.RunKey{Repo: "acme/payments", BaseSHA: "8a73f2c", HeadSHA: "81af92e", ManifestVersion: 1, PolicyVersion: 17},
-		Status:         schemas.RunStatusCompleted,
-		GeneratedAt:    &generatedAt,
-		PolicyVersion:  17,
-		ModelBindings:  []schemas.RunModelBinding{},
-		Rows:           []schemas.CanonicalReportRow{{DocPath: "docs/a.md", Glyph: schemas.ReportGlyphOk, Outcome: schemas.PipelineOutcomeIgnore, Confidence: ptrFloat64(0.5), Evidence: []string{}}},
-		Abstains:       []schemas.RunAbstain{},
-		Findings:       []schemas.RunFinding{},
-		Degradations:   []schemas.Degradation{},
+		RunID:           "run_action_coverage",
+		Key:             schemas.RunKey{Repo: "acme/payments", BaseSHA: "8a73f2c", HeadSHA: "81af92e", ManifestVersion: 1, PolicyVersion: 17},
+		Status:          schemas.RunStatusCompleted,
+		GeneratedAt:     &generatedAt,
+		PolicyVersion:   17,
+		ModelBindings:   []schemas.RunModelBinding{},
+		Rows:            []schemas.CanonicalReportRow{{DocPath: "docs/a.md", Glyph: schemas.ReportGlyphOk, Outcome: schemas.PipelineOutcomeIgnore, Confidence: ptrFloat64(0.5), Evidence: []string{}}},
+		Abstains:        []schemas.RunAbstain{},
+		Findings:        []schemas.RunFinding{},
+		Degradations:    []schemas.Degradation{},
 		UnknownCoverage: []string{},
 	}
 }
