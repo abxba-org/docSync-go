@@ -123,13 +123,12 @@ func TestApplyDocPatch_DeleteOneLine(t *testing.T) {
 	require.NotContains(t, o.ResultContent, largeDocLines[0])
 }
 
-
 func TestThreeWayMerge_BoundaryInsertionAndReplacement(t *testing.T) {
 	// Ours: insertion at a boundary, Theirs: replacement covering that boundary
 	// The insertion should go first, then the replacement
 	base := withTrailing("line1\nline2\nline3\nline4\n")
-	ours := withTrailing("LINE0\nline1\nline2\nline3\nline4\n")       // insertion at line 1
-	theirs := withTrailing("line1\nEDITED2\nEDITED3\nline4\n")        // replacement of lines 2-3
+	ours := withTrailing("LINE0\nline1\nline2\nline3\nline4\n") // insertion at line 1
+	theirs := withTrailing("line1\nEDITED2\nEDITED3\nline4\n")  // replacement of lines 2-3
 	result := patch.ThreeWayMerge(patch.ThreeWayMergeInput{Base: base, Ours: ours, Theirs: theirs})
 	require.True(t, result.Ok, "boundary insertion+replacement should merge cleanly")
 	require.Equal(t, withTrailing("LINE0\nline1\nEDITED2\nEDITED3\nline4\n"), result.Merged)
@@ -138,8 +137,8 @@ func TestThreeWayMerge_BoundaryInsertionAndReplacement(t *testing.T) {
 func TestThreeWayMerge_ViceVersa(t *testing.T) {
 	// Theirs: insertion at a boundary, Ours: replacement covering that boundary
 	base := withTrailing("line1\nline2\nline3\nline4\n")
-	theirs := withTrailing("LINE0\nline1\nline2\nline3\nline4\n")     // insertion at line 1
-	ours := withTrailing("line1\nEDITED2\nEDITED3\nline4\n")          // replacement of lines 2-3
+	theirs := withTrailing("LINE0\nline1\nline2\nline3\nline4\n") // insertion at line 1
+	ours := withTrailing("line1\nEDITED2\nEDITED3\nline4\n")      // replacement of lines 2-3
 	result := patch.ThreeWayMerge(patch.ThreeWayMergeInput{Base: base, Ours: ours, Theirs: theirs})
 	require.True(t, result.Ok, "boundary insertion+replacement should merge cleanly in either order")
 	require.Equal(t, withTrailing("LINE0\nline1\nEDITED2\nEDITED3\nline4\n"), result.Merged)
@@ -147,8 +146,8 @@ func TestThreeWayMerge_ViceVersa(t *testing.T) {
 
 func TestThreeWayMerge_OneSideOnlyChanges(t *testing.T) {
 	base := withTrailing("line1\nline2\nline3\n")
-	ours := withTrailing("MODIFIED1\nline2\nline3\n")  // only ours changes line 1
-	theirs := base                                     // theirs has nothing
+	ours := withTrailing("MODIFIED1\nline2\nline3\n") // only ours changes line 1
+	theirs := base                                    // theirs has nothing
 	result := patch.ThreeWayMerge(patch.ThreeWayMergeInput{Base: base, Ours: ours, Theirs: theirs})
 	require.True(t, result.Ok)
 	require.Equal(t, ours, result.Merged)
@@ -168,7 +167,6 @@ func TestThreeWayMerge_BothSidesSameInsertionAtEnd(t *testing.T) {
 	require.True(t, result.Ok)
 	require.Equal(t, appended, result.Merged)
 }
-
 
 func TestThreeWayMerge_FullAppendInsertionDiffEdges(t *testing.T) {
 	// Pure end insertion (side longer than base) with no open run
@@ -197,9 +195,8 @@ func TestThreeWayMerge_BothSidesDeleteSameLines(t *testing.T) {
 	require.Equal(t, deleted, result.Merged)
 }
 
-
 func TestApplyDocPatch_NoTrailingNewline(t *testing.T) {
-	docNoTrailing := strings.Join(docLines, "\n")  // no trailing \n
+	docNoTrailing := strings.Join(docLines, "\n") // no trailing \n
 	p := makeDocPatch(docPatchOpts{
 		baseContent: docNoTrailing,
 		hunks: []schemas.PatchHunk{

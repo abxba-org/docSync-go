@@ -137,8 +137,8 @@ func TestCOV_GRAPH_BuildDocumentGraph_NilConceptsFields(t *testing.T) {
 		// Concepts nil, ContractKinds nil
 	}
 	g := graph.BuildDocumentGraph(graph.BuildDocumentGraphInput{
-		Manifest:    testMappingManifest(),
-		Concepts:    &concepts,
+		Manifest: testMappingManifest(),
+		Concepts: &concepts,
 	})
 	require.Empty(t, g.Errors)
 	require.Equal(t, []string{}, g.Mappings[0].Contracts)
@@ -161,7 +161,7 @@ func TestCOV_GRAPH_BuildDocumentGraph_QuotedPaths(t *testing.T) {
 	})
 	require.Empty(t, g.Errors)
 	require.Len(t, g.Mappings, 3)
-		assert.Empty(t, g.Errors)
+	assert.Empty(t, g.Errors)
 }
 
 /* --------------------------------------------------------------- lookup */
@@ -252,7 +252,6 @@ func TestCOV_GRAPH_OrphanDeterminismUnderReorder(t *testing.T) {
 	assert.Equal(t, a, b)
 }
 
-
 /* --------------------------------------------------------------- helpers */
 
 func mustEnvelope(t *testing.T) map[string]any {
@@ -328,8 +327,8 @@ func TestCOV_GRAPH_BuildDocumentGraph_ContractsDeclared(t *testing.T) {
 		ContractKinds: map[string]schemas.ContractKind{"request_schema": schemas.ContractKindAPISchema},
 	}
 	g := graph.BuildDocumentGraph(graph.BuildDocumentGraphInput{
-		Manifest:    testMappingManifest(),
-		Concepts:    &concepts,
+		Manifest: testMappingManifest(),
+		Concepts: &concepts,
 	})
 	require.Empty(t, g.Errors)
 	require.Equal(t, []string{"request_schema"}, g.Mappings[0].Contracts)

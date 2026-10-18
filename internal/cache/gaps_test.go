@@ -59,12 +59,12 @@ func TestAnalysisCacheKeyNilCaps(t *testing.T) {
 	require.NoError(t, err)
 
 	key2, err := cache.AnalysisCacheKey(cache.AnalysisCacheKeyInput{
-		Repo:    "r",
-		BaseSHA: "b",
-		HeadSHA: "h",
+		Repo:        "r",
+		BaseSHA:     "b",
+		HeadSHA:     "h",
 		PluginNames: []string{"p1"},
-		Flags:   cache.AnalysisCacheFlags{FetchContentForGeneratedHints: false},
-		Caps:    nil,
+		Flags:       cache.AnalysisCacheFlags{FetchContentForGeneratedHints: false},
+		Caps:        nil,
 	})
 	require.NoError(t, err)
 

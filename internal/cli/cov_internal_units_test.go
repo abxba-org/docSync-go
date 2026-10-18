@@ -1175,7 +1175,6 @@ func TestCOV_CLI_075_NightlyWorkflowPresentFalseForMissingDir(t *testing.T) {
 	assert.False(t, nightlyWorkflowPresent(t.TempDir()))
 }
 
-
 /* ------------------------------------------------------- additional error lanes */
 
 func TestCOV_CLI_076_ReadOptionalFilePermissionErrorFailsClosed(t *testing.T) {

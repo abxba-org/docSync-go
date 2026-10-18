@@ -174,7 +174,7 @@ func TestApplyClaimInvalidations_EmptyReport(t *testing.T) {
 	store := newClaimStore(t)
 	applyReport, err := claims.ApplyClaimInvalidations(claims.ClaimInvalidationApplyInput{
 		InvalidationReport: claims.ClaimInvalidationReport{},
-		Store: store, RunID: runID, At: t0,
+		Store:              store, RunID: runID, At: t0,
 	})
 	require.NoError(t, err)
 	require.Empty(t, applyReport.Applied)

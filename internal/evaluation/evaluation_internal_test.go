@@ -294,12 +294,12 @@ func intPtr(v int) *int { return &v }
 
 func boolPtr(b bool) *bool { return &b }
 
-func constRng(n int) []byte {
+func constRng(n int) ([]byte, error) {
 	out := make([]byte, n)
 	for i := range out {
 		out[i] = 7
 	}
-	return out
+	return out, nil
 }
 
 func TestCOV_EVAL_Internal_MonitoringRequireHelpers(t *testing.T) {
@@ -537,7 +537,7 @@ func TestCOV_EVAL_Internal_SteadyStateSummaryWithCostGroupOverflow(t *testing.T)
 	}
 	row := &SteadyStateRow{
 		Key: "r@v1", Repo: "r", PolicyVersion: 1, RunCount: 1, DecisionCount: 10, AbstainCount: 2,
-		AbstainHealth: AbstainHealthSummary{AbstainRate: 0.2, OverrideRate: 0.1, Decisions: 10},
+		AbstainHealth:   AbstainHealthSummary{AbstainRate: 0.2, OverrideRate: 0.1, Decisions: 10},
 		CostAttribution: groups,
 	}
 	markdown := RenderSteadyStateDashboard([]*SteadyStateRow{row}, nil)
@@ -546,8 +546,8 @@ func TestCOV_EVAL_Internal_SteadyStateSummaryWithCostGroupOverflow(t *testing.T)
 
 func TestCOV_EVAL_Internal_ComputeObjectiveScoreNegativeUnsafe(t *testing.T) {
 	_, err := ComputeObjectiveScore(ComputeObjectiveScoreInput{
-		Metrics:          ObjectiveMetricsInput{DetectionRecall: 0.5, Precision: 0.5, PatchCorrectness: 0.5},
-		Usage:            UsageAccounting{TotalCostUsd: 1, TotalLatencyMs: 100},
+		Metrics:           ObjectiveMetricsInput{DetectionRecall: 0.5, Precision: 0.5, PatchCorrectness: 0.5},
+		Usage:             UsageAccounting{TotalCostUsd: 1, TotalLatencyMs: 100},
 		UnsafeAutoUpdates: -1,
 	})
 	require.Error(t, err)
@@ -690,7 +690,7 @@ func TestCOV_EVAL_Internal_BuildSteadyStateSummaryNilRowBandMinOnly(t *testing.T
 		AbstainHealth: AbstainHealthSummary{AbstainRate: 0.1, OverrideRate: 0.05, Decisions: 10},
 	}
 	summary, err := BuildSteadyStateSummary(SteadyStateSummaryInput{
-		Rows: []*SteadyStateRow{row},
+		Rows:              []*SteadyStateRow{row},
 		AbstainHealthBand: &AbstainHealthBand{MinAbstainRate: float64Ptr(0.2)},
 	})
 	require.NoError(t, err)
@@ -698,7 +698,7 @@ func TestCOV_EVAL_Internal_BuildSteadyStateSummaryNilRowBandMinOnly(t *testing.T
 	assert.Equal(t, DriftDirectionBelowMin, summary.AbstainHealth.DriftFlags[0].Direction)
 
 	summary, err = BuildSteadyStateSummary(SteadyStateSummaryInput{
-		Rows: []*SteadyStateRow{row},
+		Rows:              []*SteadyStateRow{row},
 		AbstainHealthBand: &AbstainHealthBand{MaxAbstainRate: float64Ptr(0.05)},
 	})
 	require.NoError(t, err)
@@ -710,7 +710,7 @@ func TestCOV_EVAL_Internal_BuildSteadyStateRowAutoApplyBatchZeroCausesNoSampleGa
 	row := &SteadyStateRow{
 		Key: "r@v1", Repo: "r", PolicyVersion: 1, RunCount: 1, DecisionCount: 10,
 		AbstainHealth: AbstainHealthSummary{AbstainRate: 0.1, OverrideRate: 0.05, Decisions: 10},
-		SpotCheck: SpotCheckSummary{AutoApplied: 0, Sampled: 0, Checked: 0},
+		SpotCheck:     SpotCheckSummary{AutoApplied: 0, Sampled: 0, Checked: 0},
 	}
 	summary, err := BuildSteadyStateSummary(SteadyStateSummaryInput{Rows: []*SteadyStateRow{row}})
 	require.NoError(t, err)
@@ -748,16 +748,16 @@ func TestCOV_EVAL_Internal_BuildSteadyStateSummaryNilRow(t *testing.T) {
 
 func TestCOV_EVAL_Internal_ComputeObjectiveScoreGuardClamps(t *testing.T) {
 	result, err := ComputeObjectiveScore(ComputeObjectiveScoreInput{
-		Metrics:          ObjectiveMetricsInput{DetectionRecall: 0, Precision: 0, PatchCorrectness: 0},
-		Usage:            UsageAccounting{TotalCostUsd: 0, TotalLatencyMs: 0},
+		Metrics:           ObjectiveMetricsInput{DetectionRecall: 0, Precision: 0, PatchCorrectness: 0},
+		Usage:             UsageAccounting{TotalCostUsd: 0, TotalLatencyMs: 0},
 		UnsafeAutoUpdates: 0,
 	})
 	require.NoError(t, err)
 	assert.InDelta(t, 0.1, result.Score, 1e-12)
 
 	_, err = ComputeObjectiveScore(ComputeObjectiveScoreInput{
-		Metrics: ObjectiveMetricsInput{DetectionRecall: 0.5, Precision: 0.5, PatchCorrectness: 0.5},
-		Usage:   UsageAccounting{TotalCostUsd: -1, TotalLatencyMs: 100},
+		Metrics:           ObjectiveMetricsInput{DetectionRecall: 0.5, Precision: 0.5, PatchCorrectness: 0.5},
+		Usage:             UsageAccounting{TotalCostUsd: -1, TotalLatencyMs: 100},
 		UnsafeAutoUpdates: 0,
 	})
 	require.Error(t, err)

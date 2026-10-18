@@ -535,7 +535,6 @@ func TestCOV_INTERNAL_yamlScalarEdges(t *testing.T) {
 	assert.Equal(t, "!!str", tag)
 }
 
-
 func TestCOV_INTERNAL_yamlScalarValueTaggedBranches(t *testing.T) {
 	scalar := func(value, tag string) *yaml.Node {
 		return &yaml.Node{Kind: yaml.ScalarNode, Value: value, Tag: tag, Style: yaml.TaggedStyle}

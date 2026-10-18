@@ -2,6 +2,8 @@ package gitpr
 
 import (
 	"context"
+	"errors"
+	"math"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -9,8 +11,6 @@ import (
 	"strings"
 	"testing"
 	"time"
-	"errors"
-	"math"
 
 	"github.com/DUDE616/docSync-go/internal/docutil"
 	"github.com/DUDE616/docSync-go/internal/gitx"
@@ -66,14 +66,14 @@ func covCommitAll(t *testing.T, repo *covBranchRepo, message string) string {
 const covFullSha = "0123456789abcdef0123456789abcdef01234567"
 
 func strp(value string) *string { return &value }
-func intp(value int) *int { return &value }
+func intp(value int) *int       { return &value }
 
 type covStatusError struct {
 	message string
 	status  int
 }
 
-func (e *covStatusError) Error() string { return e.message }
+func (e *covStatusError) Error() string   { return e.message }
 func (e *covStatusError) HTTPStatus() int { return e.status }
 
 type covGoneError struct {
@@ -81,7 +81,7 @@ type covGoneError struct {
 	status  int
 }
 
-func (e *covGoneError) Error() string { return e.message }
+func (e *covGoneError) Error() string   { return e.message }
 func (e *covGoneError) HTTPStatus() int { return e.status }
 
 func covRateLimited(status int) error {
@@ -106,7 +106,6 @@ func TestCov_branchTip_nonexistentBranch(t *testing.T) {
 	require.NoError(t, err)
 	assert.False(t, exists)
 }
-
 
 func TestCov_createDocBranch_emptyRepoRoot(t *testing.T) {
 	repo := covNewRepo(t)
@@ -140,7 +139,9 @@ func TestCov_createDocBranch_exhaustion(t *testing.T) {
 	require.NoError(t, err)
 	for i := 1; i <= MAX_DISAMBIGUATOR_CANDIDATES; i++ {
 		candidate := name
-		if i > 1 { candidate = name + "-" + strconv.Itoa(i) }
+		if i > 1 {
+			candidate = name + "-" + strconv.Itoa(i)
+		}
 		covRunGit(t, repo.root, "branch", candidate, firstSha)
 	}
 	factory := CreateBranchFactory(repo.client)
@@ -190,7 +191,9 @@ func TestCov_RetryWithBackoff_403ThenSuccess(t *testing.T) {
 	opCalls := 0
 	op := func(attempt int) (string, error) {
 		opCalls++
-		if opCalls == 1 { return "", covRateLimited(403) }
+		if opCalls == 1 {
+			return "", covRateLimited(403)
+		}
 		return "value", nil
 	}
 	backoff, cerr := CreateBackoff(BackoffConfig{MaxAttempts: 3, BaseDelayMs: 100, Rng: covFixedRng(0.5)}, recorder.delay)
@@ -308,7 +311,9 @@ func TestCov_DisambiguatedBranchName(t *testing.T) {
 	taken := map[string]bool{}
 	for i := 0; i < MAX_DISAMBIGUATOR_CANDIDATES; i++ {
 		c := "base"
-		if i > 0 { c = "base-" + strconv.Itoa(i+1) }
+		if i > 0 {
+			c = "base-" + strconv.Itoa(i+1)
+		}
 		taken[c] = true
 	}
 	_, err = DisambiguatedBranchName("base", taken)
@@ -541,7 +546,7 @@ func TestCov_WithGoneRetry_success(t *testing.T) {
 func TestCov_RestErrorFor_typedCodes(t *testing.T) {
 	p := githubRestPlatform{
 		credentials: PrCredentials{Kind: PrCredentialsDeveloper, Token: "tok"},
-		baseUrl: "https://api.github.com", clock: githubRestEpochClock,
+		baseUrl:     "https://api.github.com", clock: githubRestEpochClock,
 	}
 	e := p.restErrorFor("GET", "/x", GitHubRestResponse{Status: 401, Body: `{"message":"unauth"}`})
 	assert.Equal(t, CodeGitHubAuth, docutil.CodeOf(e))

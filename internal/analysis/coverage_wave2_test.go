@@ -317,7 +317,7 @@ func TestCOV2_OPENAPI_ParamsNotArr(t *testing.T) {
 		}}}},
 		map[string]any{"openapi": "3.0.3", "paths": map[string]any{"/p": map[string]any{"get": map[string]any{
 			"responses": resp("ok"),
-	}}}})
+		}}}})
 	require.Error(t, err)
 }
 

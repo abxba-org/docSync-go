@@ -120,4 +120,3 @@ func TestCOV_DRIFT_AnalyzeDriftEmptyScope(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, schemas.DriftReportSummary{}, report.Summary)
 }
-

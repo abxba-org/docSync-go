@@ -9,8 +9,8 @@ import (
 	"testing"
 
 	"github.com/DUDE616/docSync-go/internal/docutil"
-	"github.com/DUDE616/docSync-go/internal/graph"
 	"github.com/DUDE616/docSync-go/internal/gitx"
+	"github.com/DUDE616/docSync-go/internal/graph"
 	"github.com/DUDE616/docSync-go/internal/openrouter"
 	"github.com/DUDE616/docSync-go/internal/patch"
 	"github.com/DUDE616/docSync-go/internal/schemas"
@@ -31,20 +31,24 @@ func TestCOV_VERIFIER_BinHelpAndConfigErrors(t *testing.T) {
 	assert.Equal(t, verifier.AuditCLIExitOK, code)
 	assert.Contains(t, out.String(), "docsync-audit")
 
-	out.Reset(); errOut.Reset()
+	out.Reset()
+	errOut.Reset()
 	code = verifier.RunAuditReplayCLI([]string{"--bogus"}, io)
 	assert.Equal(t, verifier.AuditCLIExitConfig, code)
 	assert.Contains(t, errOut.String(), "unknown argument")
 
-	out.Reset(); errOut.Reset()
+	out.Reset()
+	errOut.Reset()
 	code = verifier.RunAuditReplayCLI([]string{"--state-dir", t.TempDir()}, io)
 	assert.Equal(t, verifier.AuditCLIExitConfig, code)
 
-	out.Reset(); errOut.Reset()
+	out.Reset()
+	errOut.Reset()
 	code = verifier.RunAuditReplayCLI([]string{"--run", "x"}, io)
 	assert.Equal(t, verifier.AuditCLIExitConfig, code)
 
-	out.Reset(); errOut.Reset()
+	out.Reset()
+	errOut.Reset()
 	code = verifier.RunAuditReplayCLI([]string{"--state-dir", filepath.Join(t.TempDir(), "nope"), "--run", "x"}, io)
 	assert.Equal(t, verifier.AuditCLIExitConfig, code)
 	assert.Contains(t, errOut.String(), "state dir does not exist")
@@ -136,7 +140,6 @@ type contentOnlyGitCov struct{}
 func (contentOnlyGitCov) CatFile(_ context.Context, _, _ string) (gitx.CatFileResult, error) {
 	return gitx.CatFileResult{}, &structDefectCov{msg: "x"}
 }
-
 
 type structDefectCov struct{ msg string }
 
@@ -254,11 +257,11 @@ func TestCOV_VERIFIER_Tier2SignatureBindingReformatted(t *testing.T) {
 
 func TestCOV_VERIFIER_Tier2CoverageEntryNotFound(t *testing.T) {
 	input := verifier.Tier2Input{
-		Patch:          vpValidCapturePatch(t),
-		Graph:          &graph.DocumentGraph{Mappings: []graph.MappingRecord{{Doc: "docs/other.md", Contracts: []string{"refund-idempotency"}}}, ContractKinds: map[string]schemas.ContractKind{"refund-idempotency": schemas.ContractKindBehavior}},
-		ContractNames:  []string{"refund-idempotency"},
-		ContractKinds:  map[string]schemas.ContractKind{"refund-idempotency": schemas.ContractKindBehavior},
-		Claims:         []schemas.Claim{},
+		Patch:         vpValidCapturePatch(t),
+		Graph:         &graph.DocumentGraph{Mappings: []graph.MappingRecord{{Doc: "docs/other.md", Contracts: []string{"refund-idempotency"}}}, ContractKinds: map[string]schemas.ContractKind{"refund-idempotency": schemas.ContractKindBehavior}},
+		ContractNames: []string{"refund-idempotency"},
+		ContractKinds: map[string]schemas.ContractKind{"refund-idempotency": schemas.ContractKindBehavior},
+		Claims:        []schemas.Claim{},
 	}
 	check := verifier.CheckCoverageDefect(input)
 	assert.Equal(t, schemas.CheckPass, check.Status)
@@ -280,9 +283,9 @@ func TestCOV_VERIFIER_Tier2HeadVerifyNoTokens(t *testing.T) {
 	tracker, err := verifier.CreateClaimStatusTracker(claims2)
 	require.NoError(t, err)
 	input := verifier.Tier2Input{
-		Patch:          vpValidCapturePatch(t),
-		DocContent:     t1StrPtr(t1ProseDoc),
-		PatchedContent: t1StrPtr(t1ProseDoc),
+		Patch:            vpValidCapturePatch(t),
+		DocContent:       t1StrPtr(t1ProseDoc),
+		PatchedContent:   t1StrPtr(t1ProseDoc),
 		WorkspaceSources: map[string]string{"src/x.ts": "returns 404 on not found"},
 	}
 	bindings := []verifier.ClaimBinding{
@@ -300,9 +303,9 @@ func TestCOV_VERIFIER_Tier2HeadVerifySignatureMismatch(t *testing.T) {
 	tracker, err := verifier.CreateClaimStatusTracker(claims2)
 	require.NoError(t, err)
 	input := verifier.Tier2Input{
-		Patch:          vpValidCapturePatch(t),
-		DocContent:     t1StrPtr(t1ProseDoc),
-		PatchedContent: t1StrPtr(t1ProseDoc),
+		Patch:            vpValidCapturePatch(t),
+		DocContent:       t1StrPtr(t1ProseDoc),
+		PatchedContent:   t1StrPtr(t1ProseDoc),
 		WorkspaceSources: map[string]string{"src/x.ts": "completely different"},
 	}
 	bindings := []verifier.ClaimBinding{
@@ -328,7 +331,7 @@ func TestCOV_VERIFIER_Tier2OverDeletionUnanchoredNote(t *testing.T) {
 	}
 	patch := t1BuildPatch(t1BuildPatchOpts{
 		baseContent: t1ProseDoc,
-		hunks: t1LineEdits(t1ProseDoc, []t1LineEdit{{line: "## Refunds", replacement: "## Refunds (revised)"}}),
+		hunks:       t1LineEdits(t1ProseDoc, []t1LineEdit{{line: "## Refunds", replacement: "## Refunds (revised)"}}),
 	})
 	input := verifier.Tier2Input{
 		Patch:      patch,
